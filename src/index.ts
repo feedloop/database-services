@@ -1,17 +1,23 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
+import authRoutes from './routes/authRoutes';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json()); // Middleware untuk parse JSON body
+app.use(express.json());
 
-app.use('/api/users', userRoutes);
+const apiRouter = express.Router();
 
-app.get('/', (req: Request, res: Response) => {
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', userRoutes);
+
+app.use('/api', apiRouter);
+
+app.get('/health', (req: Request, res: Response) => {
   res.send('Hello, TypeScript with Express!');
 });
 

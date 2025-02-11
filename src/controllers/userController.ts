@@ -1,100 +1,91 @@
-import { Request, Response, RequestHandler } from 'express';
+import { Request, Response } from 'express';
 import User from '../models/user';
-// import { hashPassword, generateApiKey } from '../utils/auth';
-
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
-
-const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey'; // Pastikan ada JWT_SECRET di .env
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { ENV } from '../config/env';
+import { hashPassword, generateApiKey } from '../utils/auth';
+import { successResponse, errorResponse } from "../utils/response";
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validasi input
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Name, email, and password are required' });
+      return errorResponse(res, 'Name, email, and password are required', 400);
     }
 
-    // Cek apakah email sudah terdaftar
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ message: 'Email is already registered' });
+      return errorResponse(res, 'Email is already registered.', 400);
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
+    const apiKey = await generateApiKey();
 
-    // Generate apikey
-    const apikey = uuidv4();
-
-    // Buat user baru
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      apikey,
+      apikey: apiKey,
     });
 
-    return res.status(201).json({
-      message: 'User registered successfully',
-      user: newUser,
-    });
+    return successResponse(res, { id: newUser.id }, "User registered successfully");
   } catch (error) {
-    console.error(error);  // Log error ke console
-    return res.status(500).json({ message: 'Terjadi kesalahan server.' });
+    console.error(error);
+    return errorResponse(res, 'Internal server error', 500);
   }
 };
 
-// User Login
 export const loginUser = async (req: Request, res: Response) => {
   try {
-      const { email, password } = req.body;
+    const { email, password } = req.body;
 
-      // Cari user berdasarkan email
-      const user = await User.findOne({ where: { email } });
-      if (!user) {
-          return res.status(401).json({ message: 'Email atau password salah.' });
-      }
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return errorResponse(res, 'Invalid credentials', 401);
+    }
 
-      // Bandingkan password yang diinput dengan password yang tersimpan
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-          return res.status(401).json({ message: 'Email atau password salah.' });
-      }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return errorResponse(res, 'Invalid credentials', 401);
+    }
 
-      // Buat token JWT
-      const token = jwt.sign({ userId: user.id, email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+    const signOptions: SignOptions = {
+      expiresIn: ENV.JWT_EXPIRES_IN as SignOptions["expiresIn"],
+    };
 
-      res.status(200).json({ token });
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      ENV.JWT_SECRET,
+      signOptions
+    );
+
+    return successResponse(res, { token }, "Login successful");
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Terjadi kesalahan server.' });
+    console.error(error);
+    return errorResponse(res, 'Internal server error', 500);
   }
 };
 
-// Get User Details (Protected)
 export const getUserDetails = async (req: Request, res: Response) => {
   try {
-      const token = req.headers.authorization?.split(' ')[1]; // Ambil token dari header
-      if (!token) {
-          return res.status(401).json({ message: 'Token tidak ditemukan.' });
-      }
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return errorResponse(res, 'Unauthorized', 401);
+    }
 
-      // Verifikasi token
-      const decoded: any = jwt.verify(token, SECRET_KEY);
-      const user = await User.findByPk(decoded.userId, {
-          attributes: { exclude: ['password'] } // Supaya password tidak ditampilkan
-      });
+    const decoded: any = jwt.verify(token, ENV.JWT_SECRET);
+    const user = await User.findByPk(decoded.userId, {
+      attributes: { exclude: ['password'] }
+    });
 
-      if (!user) {
-          return res.status(404).json({ message: 'Pengguna tidak ditemukan.' });
-      }
+    if (!user) {
+      return errorResponse(res, 'Invalid credentials', 401);
+    }
 
-      res.status(200).json(user);
+    return successResponse(res, user, "User details retrieved");
   } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Token tidak valid atau sudah kadaluarsa.' });
+    console.error(error);
+    return errorResponse(res, 'Invalid or expired token', 401);
   }
 };

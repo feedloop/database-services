@@ -1,14 +1,21 @@
 import { Sequelize, Dialect } from 'sequelize';
+import { ENV } from './env';
 const config = require('./config');
 
+const env = ENV.NODE_ENV;
+const dbConfig = config[env];
+
+if (!dbConfig) {
+  throw new Error(`Database configuration for environment "${env}" not found.`);
+}
 
 const sequelize = new Sequelize(
-  config.development.database,
-  config.development.username,
-  config.development.password,
+  dbConfig.database,
+  dbConfig.username,
+  dbConfig.password,
   {
-    ...config.development,
-    dialect: config.development.dialect as Dialect, 
+    ...dbConfig,
+    dialect: dbConfig.dialect as Dialect,
   }
 );
 
