@@ -1,7 +1,7 @@
 import { Model, DataTypes } from 'sequelize';
 const { sequelize } = require('../config/database');
 
-class User extends Model {
+class Users extends Model {
   public id!: string;
   public name!: string;
   public email!: string;
@@ -11,7 +11,7 @@ class User extends Model {
   public readonly updatedAt!: Date;
 }
 
-User.init(
+Users.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -39,11 +39,11 @@ User.init(
   },
   {
     sequelize,
-    modelName: 'User',
+    modelName: 'Users',
     tableName: 'Users',
     timestamps: true,
     underscored: true,
   }
 );
 
-export default User;
+export default Users;

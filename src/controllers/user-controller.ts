@@ -4,7 +4,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { ENV } from '../config/env';
 import { hashPassword, generateApiKey } from '../utils/auth';
 import { successResponse, errorResponse } from "../utils/response";
-import { UserRepository } from '../repositories/user-repository';
+import UserRepository from '../repositories/user-repository';
 
 export const registerUser = async (req: Request, res: Response) => {
   try {

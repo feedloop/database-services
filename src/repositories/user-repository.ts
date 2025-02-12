@@ -1,17 +1,19 @@
-import User from '../models/user';
+import Users from '../models/user';
 
-export class UserRepository {
+class UserRepository {
     static async findByEmail(email: string) {
-      return await User.findOne({ where: { email } });
+      return await Users.findOne({ where: { email } });
     }
   
     static async findById(userId: number) {
-      return await User.findByPk(userId, {
+      return await Users.findByPk(userId, {
         attributes: { exclude: ['password'] }
       });
     }
   
     static async createUser(data: { name: string; email: string; password: string; apikey: string }) {
-      return await User.create(data);
+      return await Users.create(data);
     }
   }
+
+  export default UserRepository;
