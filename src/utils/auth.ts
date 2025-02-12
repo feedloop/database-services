@@ -7,6 +7,5 @@ export const hashPassword = async (password: string): Promise<string> => {
 };
 
 export const generateApiKey = async (): Promise<string> => {
-  const key = nanoid(64);
-  return key;
+  return nanoid(64);
 };

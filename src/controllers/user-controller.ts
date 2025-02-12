@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import User from '../models/user';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { ENV } from '../config/env';
 import { hashPassword, generateApiKey } from '../utils/auth';
 import { successResponse, errorResponse } from "../utils/response";
+import { UserRepository } from '../repositories/user-repository';
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -14,15 +14,15 @@ export const registerUser = async (req: Request, res: Response) => {
       return errorResponse(res, 'Name, email, and password are required', 400);
     }
 
-    const existingUser = await User.findOne({ where: { email } });
+    const existingUser = await UserRepository.findByEmail(email);
     if (existingUser) {
-      return errorResponse(res, 'Email is already registered.', 400);
+      return errorResponse(res, 'Email is already registered', 400);
     }
 
     const hashedPassword = await hashPassword(password);
     const apiKey = await generateApiKey();
 
-    const newUser = await User.create({
+    const newUser = await UserRepository.createUser({
       name,
       email,
       password: hashedPassword,
@@ -40,14 +40,14 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ where: { email } });
+    const user = await UserRepository.findByEmail(email);
     if (!user) {
-      return errorResponse(res, 'Invalid credentials', 401);
+      return errorResponse(res, 'Unauthorized', 401);
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return errorResponse(res, 'Invalid credentials', 401);
+      return errorResponse(res, 'Unauthorized', 401);
     }
 
     const signOptions: SignOptions = {
@@ -75,17 +75,15 @@ export const getUserDetails = async (req: Request, res: Response) => {
     }
 
     const decoded: any = jwt.verify(token, ENV.JWT_SECRET);
-    const user = await User.findByPk(decoded.userId, {
-      attributes: { exclude: ['password'] }
-    });
+    const user = await UserRepository.findById(decoded.userId);
 
     if (!user) {
-      return errorResponse(res, 'Invalid credentials', 401);
+      return errorResponse(res, 'Unauthorized', 401);
     }
 
     return successResponse(res, user, "User details retrieved");
   } catch (error) {
     console.error(error);
-    return errorResponse(res, 'Invalid or expired token', 401);
+    return errorResponse(res, 'Unauthorized', 401);
   }
 };
