@@ -53,7 +53,8 @@
   "lint-staged": {
     "src/**/*.{ts,js,json}": [
       "eslint --fix",
-      "yarn prettier --write"
+      "yarn prettier --write",
+      "git add ."
     ]
   }
 }
