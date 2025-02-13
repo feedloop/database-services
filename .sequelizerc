@@ -3,7 +3,7 @@ require('dotenv').config();
 require("ts-node/register");
 
 module.exports = {
-  config: path.resolve(__dirname, "dist/config/config.js"),
+  config: path.resolve(__dirname, "src/config/sequelize.config.js"),
   "models-path": path.resolve(__dirname, "src/models"),
   "seeders-path": path.resolve(__dirname, "src/seeders"),
   "migrations-path": path.resolve(__dirname, "src/migrations"),

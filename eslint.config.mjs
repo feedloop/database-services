@@ -22,4 +22,14 @@ export default [
       "no-undef": "off",
     },
   },
+  {
+    files: ["src/config/sequelize.config.js"],
+    languageOptions: {
+      sourceType: "commonjs",
+    },
+    rules: {
+      "no-undef": "off",
+      "@typescript-eslint/no-var-requires": "off",
+    },
+  },
 ];

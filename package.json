@@ -7,7 +7,7 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrate": "yarn build && sequelize-cli db:migrate --config dist/config/config.js",
+    "migrate": "sequelize-cli db:migrate --config src/config/sequelize.config.js",
     "seed": "sequelize-cli db:seed:all",
     "prepare": "husky install",
     "lint": "eslint src",
