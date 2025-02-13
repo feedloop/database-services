@@ -1,12 +1,23 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
+import userRoutes from './routes/user-routes';
+import authRoutes from './routes/auth-routes';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get('/', (req: Request, res: Response) => {
+app.use(express.json());
+
+const apiRouter = express.Router();
+
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', userRoutes);
+
+app.use('/api', apiRouter);
+
+app.get('/health', (req: Request, res: Response) => {
   res.send('Hello, TypeScript with Express!');
 });
 
