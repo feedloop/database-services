@@ -25,11 +25,14 @@ interface EnvConfig {
 
 export const ENV: EnvConfig = {
   PORT: Number(getEnv('PORT', '3000')),
-  NODE_ENV: getEnv('NODE_ENV', 'development') as 'development' | 'production' | 'test',
+  NODE_ENV: getEnv('NODE_ENV', 'development') as
+    | 'development'
+    | 'production'
+    | 'test',
   JWT_SECRET: getEnv('JWT_SECRET'),
-  JWT_EXPIRES_IN: getEnv('JWT_EXPIRES_IN','1h'),
+  JWT_EXPIRES_IN: getEnv('JWT_EXPIRES_IN', '1h'),
   DB_USERNAME: getEnv('DB_USERNAME'),
   DB_PASSWORD: getEnv('DB_PASSWORD'),
-  DB_NAME: getEnv('DB_NAME','database_services'),
-  DB_HOST: getEnv('DB_HOST','localhost'),
+  DB_NAME: getEnv('DB_NAME', 'database_services'),
+  DB_HOST: getEnv('DB_HOST', 'localhost'),
 };

@@ -2,7 +2,9 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.sequelize.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
+    await queryInterface.sequelize.query(
+      'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";',
+    );
     await queryInterface.createTable('Users', {
       id: {
         allowNull: false,
@@ -43,5 +45,5 @@ module.exports = {
 
   async down(queryInterface) {
     await queryInterface.dropTable('Users');
-  }
+  },
 };

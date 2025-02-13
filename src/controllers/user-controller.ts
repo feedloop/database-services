@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { ENV } from '../config/env';
 import { hashPassword, generateApiKey } from '../utils/auth';
-import { successResponse, errorResponse } from "../utils/response";
+import { successResponse, errorResponse } from '../utils/response';
 import UserRepository from '../repositories/user-repository';
 
 export const registerUser = async (req: Request, res: Response) => {
@@ -29,7 +29,11 @@ export const registerUser = async (req: Request, res: Response) => {
       apikey: apiKey,
     });
 
-    return successResponse(res, { id: newUser.id }, "User registered successfully");
+    return successResponse(
+      res,
+      { id: newUser.id },
+      'User registered successfully',
+    );
   } catch (error) {
     console.error(error);
     return errorResponse(res, 'Internal server error', 500);
@@ -51,16 +55,16 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 
     const signOptions: SignOptions = {
-      expiresIn: ENV.JWT_EXPIRES_IN as SignOptions["expiresIn"],
+      expiresIn: ENV.JWT_EXPIRES_IN as SignOptions['expiresIn'],
     };
 
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       ENV.JWT_SECRET,
-      signOptions
+      signOptions,
     );
 
-    return successResponse(res, { token }, "Login successful");
+    return successResponse(res, { token }, 'Login successful');
   } catch (error) {
     console.error(error);
     return errorResponse(res, 'Internal server error', 500);
@@ -81,7 +85,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
       return errorResponse(res, 'Unauthorized', 401);
     }
 
-    return successResponse(res, user, "User details retrieved");
+    return successResponse(res, user, 'User details retrieved');
   } catch (error) {
     console.error(error);
     return errorResponse(res, 'Unauthorized', 401);

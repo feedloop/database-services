@@ -43,7 +43,7 @@ Users.init(
     tableName: 'Users',
     timestamps: true,
     underscored: true,
-  }
+  },
 );
 
 export default Users;
