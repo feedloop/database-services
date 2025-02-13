@@ -1,5 +1,4 @@
-// import dotenv from "dotenv";
-const dotenv = require('dotenv'); // test bentar
+import dotenv from 'dotenv';
 dotenv.config();
 
 const config = {
