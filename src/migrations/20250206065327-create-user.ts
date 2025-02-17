@@ -7,7 +7,7 @@ export default {
       'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";',
     );
 
-    await queryInterface.createTable('Users', {
+    await queryInterface.createTable('users', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -46,6 +46,6 @@ export default {
   },
 
   async down(queryInterface: QueryInterface) {
-    await queryInterface.dropTable('Users');
+    await queryInterface.dropTable('users');
   },
 };
