@@ -1,5 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
 import { sequelize } from '../config/database';
+import MetadataTable from './metadata-table';
 
 class MetadataColumn extends Model {
   public id!: string;
@@ -23,6 +24,11 @@ MetadataColumn.init(
     table_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: MetadataTable,
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
     },
     column_name: {
       type: DataTypes.STRING,
@@ -61,5 +67,10 @@ MetadataColumn.init(
     underscored: true,
   },
 );
+
+MetadataColumn.belongsTo(MetadataTable, {
+  foreignKey: 'table_id',
+  onDelete: 'CASCADE',
+});
 
 export default MetadataColumn;

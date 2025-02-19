@@ -1,7 +1,7 @@
 import MetadataColumn from '../models/metadata-column';
 
 class MetadataColumnRepository {
-  static async createColumn(data: {
+  static async insert(data: {
     table_id: string;
     column_name: string;
     data_type: string;
@@ -12,7 +12,7 @@ class MetadataColumnRepository {
     return await MetadataColumn.create(data);
   }
 
-  static async updateColumn(
+  static async update(
     table_id: string,
     column_name: string,
     updatedData: Partial<MetadataColumn>,
@@ -22,7 +22,7 @@ class MetadataColumnRepository {
     });
   }
 
-  static async deleteColumn(table_id: string, column_name: string) {
+  static async delete(table_id: string, column_name: string) {
     return await MetadataColumn.destroy({
       where: { table_id, column_name },
     });

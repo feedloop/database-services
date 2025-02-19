@@ -1,8 +1,8 @@
 import { Router } from 'express';
-const { handleDDLRequest } = require('../controllers/ddl-controller');
+const { migrate } = require('../controllers/ddl-controller');
 
 const router = Router();
 
-router.post('/', handleDDLRequest);
+router.post('/', migrate);
 
 export default router;

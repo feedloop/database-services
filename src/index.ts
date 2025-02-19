@@ -6,8 +6,8 @@ import ddlRoutes from './routes/ddl-routes';
 import { sequelize } from './config/database';
 
 sequelize
-  .sync({ alter: true })
-  .then(() => {
+  .sync({ force: true })
+  .then(async () => {
     console.log('Database synchronized successfully.');
   })
   .catch((err) => {
