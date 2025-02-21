@@ -1,9 +1,11 @@
+import { Transaction } from 'sequelize';
 import { sequelize } from '../../config/database';
 import MetadataTableRepository from '../../repositories/metadata-table-repository';
+import { validIdentifier } from '../../utils/validation';
 
 export class DropTable {
-  static async execute(name: string, transaction: any) {
-    if (!/^[a-zA-Z0-9_]+$/.test(name)) throw new Error('Invalid table name');
+  static async execute(name: string, transaction: Transaction) {
+    if (!validIdentifier(name)) throw new Error('Invalid table name');
 
     const tableExists = await MetadataTableRepository.findOne({
       table_name: name,
@@ -14,6 +16,10 @@ export class DropTable {
       transaction,
     });
 
-    await MetadataTableRepository.delete({ table_name: name });
+    await MetadataTableRepository.delete({ table_name: name }, transaction);
+
+    transaction.afterCommit(() => {
+      console.log(`Table "${name}" deleted from metadata.`);
+    });
   }
 }

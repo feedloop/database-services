@@ -1,39 +1,18 @@
 import { Request, Response } from 'express';
 import { sequelize } from '../config/database';
 import { successResponse, errorResponse } from '../utils/response';
+import { Operations } from '../types/ddl';
 import {
   CreateTable,
   CreateColumn,
+  AlterTable,
   AlterColumn,
   DropColumn,
   DropTable,
 } from '../operations/ddl';
 
-interface Operation {
-  operation: 'Create' | 'Alter' | 'Drop';
-  resource: 'Table' | 'Column';
-  migration: MigrationDetails;
-}
-
-interface MigrationDetails {
-  name?: string;
-  table?: string;
-  column?: string;
-  from?: string;
-  to?: string;
-  columnDefinition?: ColumnDefinition;
-}
-
-interface ColumnDefinition {
-  type: string;
-  nullable?: boolean;
-  unique?: boolean;
-  default?: any;
-  primary?: boolean;
-}
-
 export const migrate = async (req: Request, res: Response) => {
-  const { operations }: { operations: Operation[] } = req.body;
+  const { operations }: { operations: Operations[] } = req.body;
   if (!operations || !Array.isArray(operations))
     return errorResponse(res, 'Invalid payload structure', 400);
 
@@ -41,21 +20,29 @@ export const migrate = async (req: Request, res: Response) => {
 
   try {
     for (const { operation, resource, migration } of operations) {
-      const { name, table, column, from, to, columnDefinition } = migration;
+      const { name, table, column, from, to } = migration;
+
+      let finalColumnDefinition = {};
+      if (column && typeof column === 'object' && 'definition' in column) {
+        finalColumnDefinition = (column as any).definition;
+      }
 
       switch (`${operation}-${resource}`) {
         case 'Create-Table':
-          await CreateTable.execute(name!, columnDefinition, transaction);
+          await CreateTable.execute(name!, migration!, transaction);
           break;
         case 'Create-Column':
           await CreateColumn.execute(table!, migration!, transaction);
+          break;
+        case 'Alter-Table':
+          await AlterTable.execute(from!, to!, transaction);
           break;
         case 'Alter-Column':
           await AlterColumn.execute(
             table!,
             from!,
             to!,
-            columnDefinition,
+            finalColumnDefinition,
             transaction,
           );
           break;

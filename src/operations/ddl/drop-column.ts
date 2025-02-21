@@ -1,15 +1,25 @@
+import { Transaction } from 'sequelize';
 import { sequelize } from '../../config/database';
-import MetadataColumn from '../../models/metadata-column';
-import MetadataTable from '../../models/metadata-table';
+import { validIdentifier } from '../../utils/validation';
+import MetadataColumnRepository from '../../repositories/metadata-column-repository';
+import MetadataTableRepository from '../../repositories/metadata-table-repository';
 
 export class DropColumn {
-  static async execute(table: string, column: string, transaction: any) {
-    const metadataTable = await MetadataTable.findOne({
+  static async execute(
+    table: string,
+    column: string,
+    transaction: Transaction,
+  ) {
+    if (!validIdentifier(table) || !validIdentifier(column)) {
+      throw new Error('Invalid table or column name');
+    }
+
+    const metadataTable = await MetadataTableRepository.findOne({
       where: { table_name: table },
     });
     if (!metadataTable) throw new Error(`Table "${table}" does not exist`);
 
-    const existingColumn = await MetadataColumn.findOne({
+    const existingColumn = await MetadataColumnRepository.findOne({
       where: { table_id: metadataTable.id, column_name: column },
     });
     if (!existingColumn)
@@ -20,9 +30,14 @@ export class DropColumn {
       { transaction },
     );
 
-    await MetadataColumn.destroy({
-      where: { table_id: metadataTable.id, column_name: column },
+    await MetadataColumnRepository.delete(
+      metadataTable.id,
+      column,
       transaction,
+    );
+
+    transaction.afterCommit(() => {
+      console.log(`Column "${column}" deleted from metadata.`);
     });
   }
 }

@@ -1,26 +1,39 @@
-import { QueryTypes } from 'sequelize';
+import { QueryTypes, Transaction } from 'sequelize';
 import { sequelize } from '../../config/database';
 import MetadataColumnRepository from '../../repositories/metadata-column-repository';
-import MetadataTable from '../../models/metadata-table';
+import { validIdentifier } from '../../utils/validation';
+import MetadataTableRepository from '../../repositories/metadata-table-repository';
 
 export class CreateColumn {
-  static async execute(table: string, migration: any, transaction: any) {
+  static async execute(
+    table: string,
+    migration: any,
+    transaction: Transaction,
+  ) {
     const columnName = migration.name;
     const columnDefinition = migration.column;
+
+    if (!validIdentifier(table) || !validIdentifier(columnName)) {
+      throw new Error('Invalid table or column name');
+    }
 
     if (!columnName) throw new Error('Column name is missing');
     if (!columnDefinition || typeof columnDefinition !== 'object') {
       throw new Error('Column definition is missing or invalid');
     }
 
-    const metadataTable = await MetadataTable.findOne({
-      where: { table_name: table },
-    });
+    const metadataTable = await MetadataTableRepository.findOne(
+      { table_name: table },
+      transaction,
+    );
     if (!metadataTable) throw new Error(`Table ${table} does not exist`);
 
     const columnExists = await sequelize.query(
-      `SELECT column_name FROM information_schema.columns WHERE table_name = :table AND column_name = :columnName`,
-      { replacements: { table, columnName }, type: QueryTypes.SELECT },
+      `SELECT column_name FROM metadata_column WHERE table_id = :tableId AND column_name = :columnName`,
+      {
+        replacements: { tableId: metadataTable.id, columnName },
+        type: QueryTypes.SELECT,
+      },
     );
 
     if (columnExists.length > 0)
@@ -42,13 +55,20 @@ export class CreateColumn {
 
     await sequelize.query(addColumnQuery, { transaction });
 
-    await MetadataColumnRepository.insert({
-      table_id: metadataTable.id,
-      column_name: columnName,
-      data_type: colType,
-      is_primary: columnDefinition.primary ?? false,
-      is_nullable: columnDefinition.nullable ?? true,
-      is_unique: columnDefinition.unique ?? false,
+    await MetadataColumnRepository.insert(
+      {
+        table_id: metadataTable.id,
+        column_name: columnName,
+        data_type: colType,
+        is_primary: columnDefinition.primary ?? false,
+        is_nullable: columnDefinition.nullable ?? true,
+        is_unique: columnDefinition.unique ?? false,
+      },
+      transaction,
+    );
+
+    await transaction.afterCommit(async () => {
+      console.log(`Column ${columnName} metadata saved successfully`);
     });
   }
 }

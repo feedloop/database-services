@@ -17,7 +17,8 @@ export const authMiddleware = (
     const decoded = jwt.verify(token, ENV.JWT_SECRET);
     (req as any).user = decoded;
     next();
-  } catch {
+  } catch (error) {
+    console.error('Error:', error);
     return errorResponse(res, 'Unauthorized', 401);
   }
 };

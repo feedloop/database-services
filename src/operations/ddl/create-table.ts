@@ -1,10 +1,13 @@
+import { Transaction } from 'sequelize';
 import { sequelize } from '../../config/database';
 import MetadataTableRepository from '../../repositories/metadata-table-repository';
+import { validIdentifier } from '../../utils/validation';
 
 export class CreateTable {
-  static async execute(name: string, columnDefinition: any, transaction: any) {
-    if (!/^[a-zA-Z0-9_]+$/.test(name))
+  static async execute(name: string, migration: any, transaction: Transaction) {
+    if (!validIdentifier(name)) {
       throw new Error(`Invalid table name: ${name}`);
+    }
 
     const tableExists = await MetadataTableRepository.findOne({
       table_name: name,
@@ -12,7 +15,7 @@ export class CreateTable {
     if (tableExists) throw new Error(`Table ${name} already exists`);
 
     let idType = 'UUID PRIMARY KEY DEFAULT gen_random_uuid()';
-    if (columnDefinition?.type?.toLowerCase() === 'serial')
+    if (migration?.type?.toLowerCase() === 'serial')
       idType = 'SERIAL PRIMARY KEY';
 
     await sequelize.query(
@@ -20,6 +23,14 @@ export class CreateTable {
       { transaction },
     );
 
-    await MetadataTableRepository.insert({ table_name: name });
+    await sequelize.query(`LOCK TABLE metadata_table IN ROW SHARE MODE`, {
+      transaction,
+    });
+
+    await MetadataTableRepository.insert({ table_name: name }, transaction);
+
+    await transaction.afterCommit(async () => {
+      console.log(`Table ${name} metadata saved successfully`);
+    });
   }
 }
