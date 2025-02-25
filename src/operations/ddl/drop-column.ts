@@ -14,14 +14,16 @@ export class DropColumn {
       throw new Error('Invalid table or column name');
     }
 
-    const metadataTable = await MetadataTableRepository.findOne({
-      where: { table_name: table },
-    });
+    const metadataTable = await MetadataTableRepository.findOne(
+      { table_name: table },
+      transaction,
+    );
     if (!metadataTable) throw new Error(`Table "${table}" does not exist`);
 
-    const existingColumn = await MetadataColumnRepository.findOne({
-      where: { table_id: metadataTable.id, column_name: column },
-    });
+    const existingColumn = await MetadataColumnRepository.findOne(
+      { table_id: metadataTable.id, column_name: column },
+      transaction,
+    );
     if (!existingColumn)
       throw new Error(`Column "${column}" does not exist in table "${table}"`);
 

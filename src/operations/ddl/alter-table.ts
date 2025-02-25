@@ -17,9 +17,12 @@ export class AlterTable {
       throw new Error(`Table name "${from}" and "${to}" are the same.`);
     }
 
-    const tableExists = await MetadataTableRepository.findOne({
-      table_name: from,
-    });
+    const tableExists = await MetadataTableRepository.findOne(
+      {
+        table_name: from,
+      },
+      transaction,
+    );
     if (!tableExists) {
       throw new Error(`Table "${from}" does not exist.`);
     }

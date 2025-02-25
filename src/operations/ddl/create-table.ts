@@ -9,9 +9,12 @@ export class CreateTable {
       throw new Error(`Invalid table name: ${name}`);
     }
 
-    const tableExists = await MetadataTableRepository.findOne({
-      table_name: name,
-    });
+    const tableExists = await MetadataTableRepository.findOne(
+      {
+        table_name: name,
+      },
+      transaction,
+    );
     if (tableExists) throw new Error(`Table ${name} already exists`);
 
     let idType = 'UUID PRIMARY KEY DEFAULT gen_random_uuid()';
@@ -22,10 +25,6 @@ export class CreateTable {
       `CREATE TABLE IF NOT EXISTS "${name}" (id ${idType})`,
       { transaction },
     );
-
-    await sequelize.query(`LOCK TABLE metadata_table IN ROW SHARE MODE`, {
-      transaction,
-    });
 
     await MetadataTableRepository.insert({ table_name: name }, transaction);
 

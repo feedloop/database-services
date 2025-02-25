@@ -28,10 +28,13 @@ export class CreateColumn {
     );
     if (!metadataTable) throw new Error(`Table ${table} does not exist`);
 
-    const existingColumn = await MetadataColumnRepository.findOne({
-      table_id: metadataTable.id,
-      column_name: columnName,
-    });
+    const existingColumn = await MetadataColumnRepository.findOne(
+      {
+        table_id: metadataTable.id,
+        column_name: columnName,
+      },
+      transaction,
+    );
     if (existingColumn)
       throw new Error(`Column "${columnName}" already exists in "${table}"`);
 

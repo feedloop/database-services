@@ -21,15 +21,21 @@ export class AlterColumn {
     if (!table || !from || !to)
       throw new Error('Table name and column names are required.');
 
-    const metadataTable = await MetadataTableRepository.findOne({
-      table_name: table,
-    });
+    const metadataTable = await MetadataTableRepository.findOne(
+      {
+        table_name: table,
+      },
+      transaction,
+    );
     if (!metadataTable) throw new Error(`Table "${table}" does not exist.`);
 
-    const existingColumn = await MetadataColumnRepository.findOne({
-      table_id: metadataTable.id,
-      column_name: from,
-    });
+    const existingColumn = await MetadataColumnRepository.findOne(
+      {
+        table_id: metadataTable.id,
+        column_name: from,
+      },
+      transaction,
+    );
     if (!existingColumn) throw new Error(`Column "${from}" does not exist.`);
 
     const alterQueries: string[] = [];
