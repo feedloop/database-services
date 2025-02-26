@@ -36,18 +36,20 @@ jobs:
 
       - name: Install dependencies
         run: yarn install
-        
+
+      - name: Test PostgreSQL Connection
+        run: |
+        PGPASSWORD=12345678 psql -h postgres -U postgres -d database_services_test -c "SELECT 1"
 
       - name: Wait for Postgres to be ready
         run: |
           for i in {1..10}; do
-            pg_isready -h postgres -p 5432 && echo "Postgres is ready!" && exit 0
-            echo "Waiting for Postgres..."
+            echo "Checking PostgreSQL connection..."
+            PGPASSWORD=12345678 psql -h postgres -U postgres -d database_services_test -c "SELECT 1" && exit 0
+            echo "PostgreSQL not ready, retrying in 5s..."
             sleep 5
           done
-          echo "Postgres failed to start"
-          exit 1
-
+          echo "PostgreSQL failed to start!" && exit 1
 
       - name: Sync Database
         env:
