@@ -47,6 +47,14 @@ jobs:
           done
           echo "PostgreSQL failed to start!" && exit 1
 
+      - name: Debug DATABASE_URL
+        run: echo $DATABASE_URL
+
+      - name: Check Database Connection
+        run: |
+          PGPASSWORD=12345678 psql -h localhost -U postgres -d database_services_test -c "\dt"
+      
+      
       - name: Check PostgreSQL logs
         run: docker logs $(docker ps -q --filter "ancestor=postgres:13")
 
