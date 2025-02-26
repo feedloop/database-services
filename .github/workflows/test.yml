@@ -41,7 +41,7 @@ jobs:
         run: |
           for i in {1..10}; do
             echo "Checking PostgreSQL status..."
-            pg_isready -h postgres -p 5432 -U postgres && exit 0
+            pg_isready -h localhost -p 5432 && break
             echo "PostgreSQL not ready, retrying in 5s..."
             sleep 5
           done
@@ -60,20 +60,20 @@ jobs:
           DB_USERNAME: postgres
           DB_PASSWORD: 12345678
           DB_NAME: database_services_test
-          DB_HOST: postgres
+          DB_HOST: localhost
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
         run: yarn sync-db
 
-      # - name: Run migrations
-      #   env:
-      #     DB_USERNAME: postgres
-      #     DB_PASSWORD: 12345678
-      #     DB_NAME: database_services_test
-      #     DB_HOST: localhost
-      #     JWT_SECRET: supersecretkey
-      #     JWT_EXPIRES_IN: 1h
-      #   run: yarn migrate
+      - name: Run migrations
+        env:
+          DB_USERNAME: postgres
+          DB_PASSWORD: 12345678
+          DB_NAME: database_services_test
+          DB_HOST: localhost
+          JWT_SECRET: supersecretkey
+          JWT_EXPIRES_IN: 1h
+        run: yarn migrate
 
       - name: Run tests
         env:
@@ -81,8 +81,7 @@ jobs:
           DB_USERNAME: postgres
           DB_PASSWORD: 12345678
           DB_NAME: database_services_test
-          DB_HOST: postgres
+          DB_HOST: localhost
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
-          CI: true
         run: yarn test
