@@ -43,6 +43,7 @@ jobs:
             echo "Checking PostgreSQL connection..."
             pg_isready -h localhost -p 5432 && exit 0
             echo "PostgreSQL not ready, retrying in 5s..."
+            sleep 5
           done
           echo "PostgreSQL failed to start!" && exit 1
 
@@ -59,7 +60,7 @@ jobs:
           DB_USERNAME: postgres
           DB_PASSWORD: 12345678
           DB_NAME: database_services_test
-          DB_HOST: postgres
+          DB_HOST: localhost
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
         run: yarn sync-db
@@ -69,7 +70,7 @@ jobs:
           DB_USERNAME: postgres
           DB_PASSWORD: 12345678
           DB_NAME: database_services_test
-          DB_HOST: postgres
+          DB_HOST: localhost
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
         run: yarn migrate
@@ -80,7 +81,7 @@ jobs:
           DB_USERNAME: postgres
           DB_PASSWORD: 12345678
           DB_NAME: database_services_test
-          DB_HOST: postgres
+          DB_HOST: localhost
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
         run: yarn test
