@@ -43,15 +43,29 @@ jobs:
             pg_isready -h localhost -p 5432 && break || sleep 5
           done
 
-      - name: Run migrations
+      - name: Sync Database
         env:
+          NODE_ENV: test
           DB_USERNAME: postgres
           DB_PASSWORD: 12345678
           DB_NAME: database_services_test
           DB_HOST: localhost
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
-        run: yarn migrate
+        run: yarn sync-db
+
+      - name: Wait for database to settle
+        run: sleep 5
+
+      # - name: Run migrations
+      #   env:
+      #     DB_USERNAME: postgres
+      #     DB_PASSWORD: 12345678
+      #     DB_NAME: database_services_test
+      #     DB_HOST: localhost
+      #     JWT_SECRET: supersecretkey
+      #     JWT_EXPIRES_IN: 1h
+      #   run: yarn migrate
 
       - name: Run tests
         env:

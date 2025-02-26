@@ -11,7 +11,8 @@
     "seed": "sequelize-cli db:seed:all",
     "prepare": "husky install",
     "lint": "eslint src",
-    "test": "jest"
+    "test": "jest",
+    "sync-db": "ts-node ./src/sync.ts"
   },
   "dependencies": {
     "@tsconfig/node16": "^16.1.3",
