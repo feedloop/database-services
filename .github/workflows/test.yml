@@ -36,12 +36,18 @@ jobs:
 
       - name: Install dependencies
         run: yarn install
+        
 
       - name: Wait for Postgres to be ready
         run: |
           for i in {1..10}; do
-            pg_isready -h localhost -p 5432 && break || sleep 5
+            pg_isready -h postgres -p 5432 && echo "Postgres is ready!" && exit 0
+            echo "Waiting for Postgres..."
+            sleep 5
           done
+          echo "Postgres failed to start"
+          exit 1
+
 
       - name: Sync Database
         env:
@@ -49,13 +55,13 @@ jobs:
           DB_USERNAME: postgres
           DB_PASSWORD: 12345678
           DB_NAME: database_services_test
-          DB_HOST: localhost
+          DB_HOST: postgres
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
         run: yarn sync-db
 
       - name: Wait for database to settle
-        run: sleep 5
+        run: sleep 10
 
       # - name: Run migrations
       #   env:
@@ -73,7 +79,7 @@ jobs:
           DB_USERNAME: postgres
           DB_PASSWORD: 12345678
           DB_NAME: database_services_test
-          DB_HOST: localhost
+          DB_HOST: postgres
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
         run: yarn test
