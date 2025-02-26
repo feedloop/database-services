@@ -86,6 +86,10 @@ jobs:
           JWT_EXPIRES_IN: 1h
         run: yarn migrate
 
+      - name: Check Database Connection
+        run: |
+          PGPASSWORD=12345678 psql -h localhost -U postgres -d database_services_test -c "\dt"
+
       - name: Run tests
         env:
           NODE_ENV: test
