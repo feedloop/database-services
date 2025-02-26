@@ -37,19 +37,22 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Test PostgreSQL Connection
-        run: |
-        PGPASSWORD=12345678 psql -h postgres -U postgres -d database_services_test -c "SELECT 1"
-
       - name: Wait for Postgres to be ready
         run: |
           for i in {1..10}; do
-            echo "Checking PostgreSQL connection..."
-            PGPASSWORD=12345678 psql -h postgres -U postgres -d database_services_test -c "SELECT 1" && exit 0
+            echo "Checking PostgreSQL status..."
+            pg_isready -h postgres -p 5432 -U postgres && exit 0
             echo "PostgreSQL not ready, retrying in 5s..."
             sleep 5
           done
           echo "PostgreSQL failed to start!" && exit 1
+
+      - name: Check PostgreSQL logs
+        run: docker logs $(docker ps -q --filter "ancestor=postgres:13")
+
+
+      - name: Wait for database to settle
+        run: sleep 10
 
       - name: Sync Database
         env:
@@ -61,9 +64,6 @@ jobs:
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
         run: yarn sync-db
-
-      - name: Wait for database to settle
-        run: sleep 10
 
       # - name: Run migrations
       #   env:
@@ -84,4 +84,5 @@ jobs:
           DB_HOST: postgres
           JWT_SECRET: supersecretkey
           JWT_EXPIRES_IN: 1h
+          CI: true
         run: yarn test
