@@ -7,14 +7,20 @@ export interface Operations {
 export interface MigrationDetails {
   name?: string;
   table?: string;
-  column?: string;
+  column?: string | ColumnObject;
   from?: string;
   to?: string;
-  columnDefinition?: ColumnDefinition;
+  description?: string;
+  primaryKey?: string;
+}
+
+export interface ColumnObject {
+  type?: string;
+  definition?: ColumnDefinition;
 }
 
 export interface ColumnDefinition {
-  type: string;
+  textType?: string;
   nullable?: boolean;
   unique?: boolean;
   default?: any;

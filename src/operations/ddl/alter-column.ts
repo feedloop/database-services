@@ -19,7 +19,7 @@ export class AlterColumn {
     transaction: Transaction,
   ) {
     if (!table || !from || !to)
-      throw new Error('Table name and column names are required.');
+      throw new Error('Table name and column names are required');
 
     const metadataTable = await MetadataTableRepository.findOne(
       {
@@ -27,7 +27,7 @@ export class AlterColumn {
       },
       transaction,
     );
-    if (!metadataTable) throw new Error(`Table "${table}" does not exist.`);
+    if (!metadataTable) throw new Error(`Table ${table} does not exist`);
 
     const existingColumn = await MetadataColumnRepository.findOne(
       {
@@ -36,7 +36,16 @@ export class AlterColumn {
       },
       transaction,
     );
-    if (!existingColumn) throw new Error(`Column "${from}" does not exist.`);
+    if (!existingColumn) throw new Error(`Column ${from} does not exist`);
+
+    const toExistingColumn = await MetadataColumnRepository.findOne(
+      {
+        table_id: metadataTable.id,
+        column_name: to,
+      },
+      transaction,
+    );
+    if (toExistingColumn) throw new Error(`Column ${to} already exist`);
 
     const alterQueries: string[] = [];
 

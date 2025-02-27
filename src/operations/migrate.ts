@@ -1,4 +1,5 @@
 import { Transaction } from 'sequelize';
+import { ColumnObject, Operations } from '../types/ddl';
 import {
   CreateTable,
   CreateColumn,
@@ -8,55 +9,52 @@ import {
   DropTable,
 } from '../operations/ddl';
 
-export async function executeDDLFromPayload(
-  operations: any[],
-  transaction: Transaction,
-) {
-  for (const op of operations) {
-    switch (op.operation) {
-      case 'Create':
-        if (op.resource === 'Table') {
-          await CreateTable.execute(
-            op.migration.name,
-            { type: op.migration.primaryKey },
-            transaction,
-          );
-        } else if (op.resource === 'Column') {
-          await CreateColumn.execute(
-            op.migration.table,
-            { name: op.migration.name, column: op.migration.column },
-            transaction,
-          );
-        }
-        break;
-      case 'Alter':
-        if (op.resource === 'Table') {
-          await AlterTable.execute(
-            op.migration.from,
-            op.migration.to,
-            transaction,
-          );
-        } else if (op.resource === 'Column') {
+export class DDLExecutor {
+  static async execute(operations: Operations[], transaction: Transaction) {
+    for (const { operation, resource, migration } of operations) {
+      const { name, table, column, from, to } = migration;
+
+      let columnName: string;
+      let finalColumnDefinition = {};
+      // let columnName = typeof column === 'string' ? column : undefined;
+      // if (column && typeof column === 'object' && 'definition' in column) {
+      //   finalColumnDefinition = (column as any).definition;
+      // }
+
+      if (typeof column === 'string') {
+        columnName = column;
+      } else if (typeof column === 'object' && 'definition' in column) {
+        finalColumnDefinition = (column as ColumnObject).definition ?? {};
+      }
+
+      switch (`${operation}-${resource}`) {
+        case 'Create-Table':
+          await CreateTable.execute(name!, migration!, transaction);
+          break;
+        case 'Create-Column':
+          await CreateColumn.execute(table!, migration!, transaction);
+          break;
+        case 'Alter-Table':
+          await AlterTable.execute(from!, to!, transaction);
+          break;
+        case 'Alter-Column':
           await AlterColumn.execute(
-            op.migration.table,
-            op.migration.from,
-            op.migration.to,
-            op.migration.column?.definition || {},
+            table!,
+            from!,
+            to!,
+            finalColumnDefinition,
             transaction,
           );
-        }
-        break;
-      case 'Drop':
-        if (op.resource === 'Table') {
-          await DropTable.execute(op.migration.name, transaction);
-        } else if (op.resource === 'Column') {
-          await DropColumn.execute(
-            op.migration.table,
-            op.migration.column,
-            transaction,
-          );
-        }
-        break;
+          break;
+        case 'Drop-Column':
+          await DropColumn.execute(table!, columnName!, transaction);
+          break;
+        case 'Drop-Table':
+          await DropTable.execute(name!, transaction);
+          break;
+        default:
+          throw new Error(`Unsupported operation: ${operation} on ${resource}`);
+      }
     }
   }
 }

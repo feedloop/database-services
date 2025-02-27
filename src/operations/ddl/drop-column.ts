@@ -18,14 +18,14 @@ export class DropColumn {
       { table_name: table },
       transaction,
     );
-    if (!metadataTable) throw new Error(`Table "${table}" does not exist`);
+    if (!metadataTable) throw new Error(`Table ${table} does not exist`);
 
     const existingColumn = await MetadataColumnRepository.findOne(
       { table_id: metadataTable.id, column_name: column },
       transaction,
     );
     if (!existingColumn)
-      throw new Error(`Column "${column}" does not exist in table "${table}"`);
+      throw new Error(`Column ${column} does not exist in table ${table}`);
 
     await sequelize.query(
       `ALTER TABLE "${table}" DROP COLUMN IF EXISTS "${column}"`,
