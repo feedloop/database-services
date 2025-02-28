@@ -2,6 +2,7 @@ import { sequelize } from '../config/database';
 import { Transaction } from 'sequelize';
 import { DDLExecutor } from '../operations/migrate';
 import { Operations } from '../types/ddl';
+import MetadataTableRepository from '../repositories/metadata-table-repository';
 
 let transaction: Transaction;
 
@@ -99,11 +100,13 @@ describe('DDL Operations', () => {
     );
     expect(tableResults?.length ?? 0).toBe(0);
 
-    const [metadataTableResults]: any = await sequelize.query(
-      `SELECT * FROM metadata_table WHERE table_name = 'updated_table';`,
-      { transaction },
+    const metadataTableResults = await MetadataTableRepository.findOne(
+      {
+        table_name: 'updated_table',
+      },
+      transaction,
     );
-    expect(metadataTableResults?.length ?? 0).toBe(0);
+    expect(metadataTableResults).toBeNull();
   });
 
   // CREATE TABLE TESTS
@@ -146,12 +149,13 @@ describe('DDL Operations', () => {
 
     await DDLExecutor.execute(payload, transaction);
 
-    const [metadataResults]: any = await sequelize.query(
-      `SELECT * FROM metadata_table WHERE table_name = 'metadata_test_table';`,
-      { transaction },
+    const metadataTableResults = await MetadataTableRepository.findOne(
+      {
+        table_name: 'metadata_test_table',
+      },
+      transaction,
     );
-
-    expect(metadataResults?.length ?? 0).toBe(1);
+    expect(metadataTableResults).not.toBeNull();
   });
 
   test('Prevent SQL Injection in table name', async () => {
