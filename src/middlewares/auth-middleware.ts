@@ -18,6 +18,7 @@ export const authMiddleware = (
     (req as any).user = decoded;
     next();
   } catch (error) {
+    console.error('Error:', error);
     return errorResponse(res, 'Unauthorized', 401);
   }
 };

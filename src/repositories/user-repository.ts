@@ -1,17 +1,12 @@
 import Users from '../models/user';
+import { WhereOptions } from 'sequelize';
 
 class UserRepository {
-  static async findByEmail(email: string) {
-    return await Users.findOne({ where: { email } });
+  static async findOne(condition: WhereOptions) {
+    return await Users.findOne({ where: condition });
   }
 
-  static async findById(userId: number) {
-    return await Users.findByPk(userId, {
-      attributes: { exclude: ['password'] },
-    });
-  }
-
-  static async createUser(data: {
+  static async insert(data: {
     name: string;
     email: string;
     password: string;

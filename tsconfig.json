@@ -6,7 +6,9 @@
     "rootDir": "./src",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true
   },
   "include": ["src", "src/config"], 
   "exclude": ["node_modules", "dist"]

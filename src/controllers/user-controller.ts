@@ -14,7 +14,7 @@ export const registerUser = async (req: Request, res: Response) => {
       return errorResponse(res, 'Name, email, and password are required', 400);
     }
 
-    const existingUser = await UserRepository.findByEmail(email);
+    const existingUser = await UserRepository.findOne({ email });
     if (existingUser) {
       return errorResponse(res, 'Email is already registered', 400);
     }
@@ -22,7 +22,7 @@ export const registerUser = async (req: Request, res: Response) => {
     const hashedPassword = await hashPassword(password);
     const apiKey = await generateApiKey();
 
-    const newUser = await UserRepository.createUser({
+    const newUser = await UserRepository.insert({
       name,
       email,
       password: hashedPassword,
@@ -44,7 +44,7 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await UserRepository.findByEmail(email);
+    const user = await UserRepository.findOne({ email });
     if (!user) {
       return errorResponse(res, 'Unauthorized', 401);
     }
@@ -79,7 +79,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
     }
 
     const decoded: any = jwt.verify(token, ENV.JWT_SECRET);
-    const user = await UserRepository.findById(decoded.userId);
+    const user = await UserRepository.findOne({ id: decoded.userId });
 
     if (!user) {
       return errorResponse(res, 'Unauthorized', 401);
