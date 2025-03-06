@@ -46,6 +46,7 @@ export class CreateColumn {
       ALTER TABLE "${table}" ADD COLUMN "${columnName}" ${colType}
       ${columnDefinition.nullable ? '' : 'NOT NULL'} 
       ${columnDefinition.unique ? 'UNIQUE' : ''}
+      ${colType === 'timestamp' ? 'DEFAULT NOW()' : ''}
     `;
 
     await sequelize.query(addColumnQuery, { transaction });

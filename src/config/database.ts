@@ -19,4 +19,5 @@ const sequelize = new Sequelize(
   },
 );
 
+import '../models/relations';
 export { sequelize };

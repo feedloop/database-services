@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { sequelize } from '../config/database';
 import { successResponse, errorResponse } from '../utils/response';
-import { Operations } from '../types/ddl';
+import { DDLOperations } from '../types/ddl';
 import { DDLExecutor } from '../operations/migrate';
 
 export const migrate = async (req: Request, res: Response) => {
-  const { operations }: { operations: Operations[] } = req.body;
+  const { operations }: { operations: DDLOperations[] } = req.body;
   if (!operations || !Array.isArray(operations))
     return errorResponse(res, 'Invalid payload structure', 400);
 

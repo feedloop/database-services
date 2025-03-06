@@ -1,4 +1,4 @@
-export interface Operations {
+export interface DDLOperations {
   operation: 'Create' | 'Alter' | 'Drop';
   resource: 'Table' | 'Column';
   migration: MigrationDetails;
