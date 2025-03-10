@@ -1,7 +1,7 @@
-import { ConditionOperator } from '../types/dml';
+import { Condition } from '../types/dml';
 
 export function parseConditionForQuery(
-  cond: ConditionOperator,
+  cond: Condition,
   replacements: Record<string, any>,
   params?: Record<string, any>,
 ): string {
@@ -11,29 +11,41 @@ export function parseConditionForQuery(
   let index = replacements.length + 1;
 
   for (const [key, value] of Object.entries(cond)) {
-    if (key === '$or' && Array.isArray(value)) {
-      const orClauses = value
-        .map((v) => `(${parseConditionForQuery(v, replacements, params)})`)
-        .join(' OR ');
-      clauses.push(`(${orClauses})`);
-    } else if (key === '$and' && Array.isArray(value)) {
-      const andClauses = value
-        .map((v) => `(${parseConditionForQuery(v, replacements, params)})`)
-        .join(' AND ');
-      clauses.push(`(${andClauses})`);
-    } else if (typeof value === 'object' && value !== null && '$eq' in value) {
-      let paramValue = value['$eq'];
-      if (
-        typeof paramValue === 'string' &&
-        paramValue.startsWith('{{') &&
-        paramValue.endsWith('}}')
-      ) {
-        const paramKey = paramValue.slice(2, -2);
-        paramValue = params?.[paramKey];
-      }
-      clauses.push(`"${key}" = $${index}`);
-      replacements.push(paramValue);
-      index++;
+    switch (key) {
+      case '$or':
+        if (Array.isArray(value)) {
+          const orClauses = value
+            .map((v) => `(${parseConditionForQuery(v, replacements, params)})`)
+            .join(' OR ');
+          clauses.push(`(${orClauses})`);
+        }
+        break;
+
+      case '$and':
+        if (Array.isArray(value)) {
+          const andClauses = value
+            .map((v) => `(${parseConditionForQuery(v, replacements, params)})`)
+            .join(' AND ');
+          clauses.push(`(${andClauses})`);
+        }
+        break;
+
+      default:
+        if (typeof value === 'object' && value !== null && '$eq' in value) {
+          let paramValue = value['$eq'];
+          if (
+            typeof paramValue === 'string' &&
+            paramValue.startsWith('{{') &&
+            paramValue.endsWith('}}')
+          ) {
+            const paramKey = paramValue.slice(2, -2);
+            paramValue = params?.[paramKey];
+          }
+          clauses.push(`"${key}" = $${index}`);
+          replacements.push(paramValue);
+          index++;
+        }
+        break;
     }
   }
 
@@ -41,7 +53,7 @@ export function parseConditionForQuery(
 }
 
 export function parseConditionForNamedParams(
-  condition: ConditionOperator,
+  condition: Condition,
   replacements: Record<string, any>,
   params?: Record<string, any>,
 ): string {

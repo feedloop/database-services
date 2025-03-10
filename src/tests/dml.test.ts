@@ -163,12 +163,12 @@ describe('DML Operations', () => {
           set: {
             external_id: 'admin1',
           },
+          params: {},
         },
       },
       {
         operation: 'Delete',
         instruction: {
-          view: 'ok',
           table: 'test_dml',
           name: 'data',
           condition: {
@@ -195,6 +195,34 @@ describe('DML Operations', () => {
     expect(test_dml.length).toBeGreaterThanOrEqual(0);
   });
 
+  // SELECT
+  test('Prevent SQL injection on select', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          name: 'data',
+          table: 'test_dml',
+          condition: {
+            email: {
+              $eq: "' OR 1=1; --",
+            },
+          },
+          orderBy: {
+            created_at: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    await expect(
+      DMLExecutor.execute(dmlPayload, transaction),
+    ).rejects.toThrow();
+  });
+
   // INSERT
   test('Fail insert row into non-existent table', async () => {
     const dmlPayload: DMLOperations[] = [
@@ -216,6 +244,26 @@ describe('DML Operations', () => {
     );
   });
 
+  test('Prevent SQL injection on insert', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Insert',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          data: {
+            external_id: "user1'; DROP TABLE test_dml; --",
+            email: "admin@admin.com'); SELECT * FROM users; --",
+          },
+        },
+      },
+    ];
+
+    await expect(
+      DMLExecutor.execute(dmlPayload, transaction),
+    ).rejects.toThrow();
+  });
+
   // UPDATE
   test(' Fail update row into non-existent table', async () => {
     const dmlPayload: DMLOperations[] = [
@@ -232,6 +280,7 @@ describe('DML Operations', () => {
           set: {
             external_id: 'admin1',
           },
+          params: {},
         },
       },
     ];
@@ -241,7 +290,7 @@ describe('DML Operations', () => {
     );
   });
 
-  test('Fail update row with non-existent condition', async () => {
+  test('Prevent SQL injection on update', async () => {
     const dmlPayload: DMLOperations[] = [
       {
         operation: 'Update',
@@ -250,19 +299,20 @@ describe('DML Operations', () => {
           name: 'data',
           condition: {
             external_id: {
-              $eq: 'non_existing_user',
+              $eq: "'; DROP TABLE test_dml; --",
             },
           },
           set: {
-            external_id: 'admin1',
+            email: "admin@admin.com'); SELECT * FROM users; --",
           },
+          params: {},
         },
       },
     ];
 
-    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
-      'No matching record found in table test_dml for update',
-    );
+    await expect(
+      DMLExecutor.execute(dmlPayload, transaction),
+    ).rejects.toThrow();
   });
 
   // DELETE
@@ -278,6 +328,7 @@ describe('DML Operations', () => {
               $eq: 'user1',
             },
           },
+          params: {},
         },
       },
     ];
@@ -287,7 +338,7 @@ describe('DML Operations', () => {
     );
   });
 
-  test('Fail delete row with non-existent condition', async () => {
+  test('Prevent SQL injection on delete', async () => {
     const dmlPayload: DMLOperations[] = [
       {
         operation: 'Delete',
@@ -296,15 +347,16 @@ describe('DML Operations', () => {
           name: 'data',
           condition: {
             external_id: {
-              $eq: 'non_existing_user',
+              $eq: "' OR 1=1; --",
             },
           },
+          params: {},
         },
       },
     ];
 
-    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
-      'No matching record found in table test_dml for update',
-    );
+    await expect(
+      DMLExecutor.execute(dmlPayload, transaction),
+    ).rejects.toThrow();
   });
 });

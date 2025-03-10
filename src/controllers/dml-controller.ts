@@ -10,7 +10,6 @@ export const execute = async (req: Request, res: Response) => {
     return errorResponse(res, 'Invalid payload structure', 400);
 
   const transaction = await sequelize.transaction();
-  // console.log('Received Operations:', JSON.stringify(operations, null, 2));
 
   try {
     const result = await DMLExecutor.execute(operations, transaction);

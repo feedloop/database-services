@@ -1,11 +1,5 @@
 import { Transaction } from 'sequelize';
-import {
-  DeleteInstruction,
-  InsertInstruction,
-  DMLOperations,
-  SelectInstruction,
-  UpdateInstruction,
-} from '../types/dml';
+import { DMLOperations } from '../types/dml';
 import {
   SelectOperation,
   InsertOperation,
@@ -21,31 +15,22 @@ export class DMLExecutor {
       switch (operation) {
         case 'Select': {
           const selectResult = await SelectOperation.execute(
-            instruction as SelectInstruction,
+            instruction,
             transaction,
           );
           results.push(selectResult);
           break;
         }
         case 'Insert': {
-          await InsertOperation.execute(
-            instruction as InsertInstruction,
-            transaction,
-          );
+          await InsertOperation.execute(instruction, transaction);
           break;
         }
         case 'Update': {
-          await UpdateOperation.execute(
-            instruction as UpdateInstruction,
-            transaction,
-          );
+          await UpdateOperation.execute(instruction, transaction);
           break;
         }
         case 'Delete': {
-          await DeleteOperation.execute(
-            instruction as DeleteInstruction,
-            transaction,
-          );
+          await DeleteOperation.execute(instruction, transaction);
           break;
         }
         default: {

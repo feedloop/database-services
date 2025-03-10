@@ -1,7 +1,7 @@
 import { sequelize } from '../config/database';
 import { QueryTypes, Transaction } from 'sequelize';
 import { validIdentifier } from '../utils/validation';
-import { ConditionOperator } from '../types/dml';
+import { Condition } from '../types/dml';
 import {
   parseConditionForNamedParams,
   parseConditionForQuery,
@@ -13,11 +13,15 @@ export class DMLRepository {
     data: Record<string, any>,
     transaction?: Transaction,
   ) {
-    // console.log('Sequelize Dialect:', sequelize.getDialect());
+    if (!validIdentifier(table))
+      throw new Error(`Invalid table name: ${table}`);
 
     const keys = Object.keys(data);
-    const values = Object.values(data);
+    if (keys.some((key) => !validIdentifier(key))) {
+      throw new Error(`Invalid column name in insert operation`);
+    }
 
+    const values = Object.values(data);
     const placeholders = keys.map((_, index) => `$${index + 1}`).join(', ');
     const query = `INSERT INTO "${table}" (${keys.map((key) => `"${key}"`).join(', ')}) VALUES (${placeholders}) RETURNING *`;
 
@@ -26,14 +30,13 @@ export class DMLRepository {
       bind: values,
       transaction,
     });
-    // console.log('QUERY RESULT:', result);
     return result;
   }
 
   static async update(
     table: string,
     set: Record<string, any>,
-    condition: ConditionOperator,
+    condition: Condition,
     params?: Record<string, any>,
     transaction?: Transaction,
   ) {
@@ -42,6 +45,9 @@ export class DMLRepository {
 
     if (!set || Object.keys(set).length === 0)
       throw new Error('Update set cannot be empty');
+
+    if (Object.keys(set).some((key) => !validIdentifier(key)))
+      throw new Error(`Invalid column name in update operation`);
 
     let query = `UPDATE "${table}" SET `;
     const setClauses: string[] = [];
@@ -58,9 +64,6 @@ export class DMLRepository {
     const whereClause = parseConditionForQuery(condition, replacements, params);
     query += ` WHERE ${whereClause}`;
 
-    // console.log("QUERY:", query);
-    // console.log("REPLACEMENTS:", replacements);
-
     return await sequelize.query(query, {
       type: QueryTypes.UPDATE,
       bind: replacements,
@@ -70,7 +73,7 @@ export class DMLRepository {
 
   static async delete(
     table: string,
-    condition: ConditionOperator,
+    condition: Condition,
     params?: Record<string, any>,
     transaction?: Transaction,
   ) {
@@ -82,9 +85,6 @@ export class DMLRepository {
 
     const whereClause = parseConditionForQuery(condition, replacements, params);
     query += ` WHERE ${whereClause}`;
-
-    // console.log("QUERY:", query);
-    // console.log("REPLACEMENTS:", replacements);
 
     await sequelize.query(query, {
       type: QueryTypes.DELETE,
@@ -102,6 +102,12 @@ export class DMLRepository {
     params?: Record<string, any>,
     transaction?: any,
   ) {
+    if (!validIdentifier(table))
+      throw new Error(`Invalid table name: ${table}`);
+
+    if (orderBy && Object.keys(orderBy).some((key) => !validIdentifier(key)))
+      throw new Error(`Invalid column name in orderBy`);
+
     let query = `SELECT * FROM "${table}"`;
     const replacements: any = {};
 

@@ -1,54 +1,52 @@
-export interface DMLOperations {
-  operation: 'Select' | 'Insert' | 'Update' | 'Delete';
-  instruction:
-    | SelectInstruction
-    | InsertInstruction
-    | UpdateInstruction
-    | DeleteInstruction;
-}
+export type DMLOperations =
+  | { operation: 'Select'; instruction: SelectInstruction }
+  | { operation: 'Insert'; instruction: InsertInstruction }
+  | { operation: 'Update'; instruction: UpdateInstruction }
+  | { operation: 'Delete'; instruction: DeleteInstruction };
 
-export type ConditionOperator = {
-  $eq?: string | number;
-  $neq?: string | number | boolean | null;
-  $gt?: number;
-  $gte?: number;
-  $lt?: number;
-  $lte?: number;
-  $in?: (string | number | boolean | null)[];
-  $nin?: (string | number | boolean | null)[];
-  $and?: Condition[];
-  $or?: Condition[];
-};
+export type ComparisonOperator = string | number | boolean | null;
 
-export type Condition =
-  | { $and?: Condition[]; $or?: Condition[] }
-  | Record<string, ConditionOperator>;
+export type ConditionOperator =
+  | { $eq: ComparisonOperator }
+  | { $neq: ComparisonOperator }
+  | { $gt: number }
+  | { $gte: number }
+  | { $lt: number }
+  | { $lte: number }
+  | { $in: ComparisonOperator[] }
+  | { $nin: ComparisonOperator[] };
 
-export interface Instruction {
-  name?: string;
+export type LogicalOperator = { $and: Condition[] } | { $or: Condition[] };
+
+export type Condition = LogicalOperator | Record<string, ConditionOperator>;
+
+export interface SelectInstruction {
   table: string;
+  name: string;
+  orderBy: Record<string, 'ASC' | 'DESC'>;
+  condition: Condition;
+  limit: number;
+  offset: number;
+  params: Record<string, any>;
 }
 
-export interface SelectInstruction extends Instruction {
-  orderBy?: Record<string, 'ASC' | 'DESC'>;
-  condition?: Condition;
-  limit?: number;
-  offset?: number;
-  params?: Record<string, any>;
-}
-
-export interface InsertInstruction extends Instruction {
+export interface InsertInstruction {
+  table: string;
+  name: string;
   data: Record<string, string | number>;
 }
 
-export interface UpdateInstruction extends Instruction {
+export interface UpdateInstruction {
+  table: string;
+  name: string;
   condition: Condition;
   set: Record<string, string | number>;
-  params?: Record<string, any>;
+  params: Record<string, any>;
 }
 
-export interface DeleteInstruction extends Instruction {
-  view?: string;
+export interface DeleteInstruction {
+  table: string;
+  name: string;
   condition: Condition;
-  params?: Record<string, any>;
+  params: Record<string, any>;
 }

@@ -1,16 +1,11 @@
-import { Model, DataTypes, HasManyGetAssociationsMixin } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import { sequelize } from '../config/database';
-import MetadataColumn from './metadata-column';
 
 class MetadataTable extends Model {
   public id!: string;
   public table_name!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-  primaryKey: any;
-
-  public columns?: MetadataColumn[];
-  public getColumns!: HasManyGetAssociationsMixin<MetadataColumn>;
 }
 
 MetadataTable.init(

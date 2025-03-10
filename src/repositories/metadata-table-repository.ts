@@ -24,10 +24,6 @@ class MetadataTableRepository {
   static async delete(condition: WhereOptions, transaction?: Transaction) {
     return await MetadataTable.destroy({ where: condition, transaction });
   }
-
-  static async getAll(transaction?: Transaction) {
-    return await MetadataTable.findAll({ transaction });
-  }
 }
 
 export default MetadataTableRepository;

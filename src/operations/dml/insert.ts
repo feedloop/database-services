@@ -1,7 +1,7 @@
 import { Transaction } from 'sequelize';
 import { InsertInstruction } from '../../types/dml';
 import { DMLRepository } from '../../repositories/dml-repository';
-import { validIdentifier } from '../../utils/validation';
+import { validateData, validIdentifier } from '../../utils/validation';
 import MetadataTableRepository from '../../repositories/metadata-table-repository';
 
 export class InsertOperation {
@@ -10,6 +10,7 @@ export class InsertOperation {
     transaction: Transaction,
   ) {
     const { table, data } = instruction;
+
     if (!validIdentifier(table)) {
       throw new Error(`Invalid table name: ${table}`);
     }
@@ -17,6 +18,8 @@ export class InsertOperation {
     if (!data || Object.keys(data).length === 0) {
       throw new Error('Insert data cannot be empty');
     }
+
+    validateData(data);
 
     const metadataTable = await MetadataTableRepository.findOne(
       { table_name: table },
