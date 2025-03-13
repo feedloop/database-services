@@ -1,4 +1,4 @@
-import { Condition } from '../types/dml';
+import { Condition, ConditionOperator, PrimitiveType } from '../types/dml';
 
 export function parseConditionForQuery(
   cond: Condition,
@@ -31,19 +31,32 @@ export function parseConditionForQuery(
         break;
 
       default:
-        if (typeof value === 'object' && value !== null && '$eq' in value) {
-          let paramValue = value['$eq'];
-          if (
-            typeof paramValue === 'string' &&
-            paramValue.startsWith('{{') &&
-            paramValue.endsWith('}}')
-          ) {
-            const paramKey = paramValue.slice(2, -2);
-            paramValue = params?.[paramKey];
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          const operatorKey = Object.keys(value)[0] as keyof ConditionOperator;
+          const conditionValue = (value as ConditionOperator)[operatorKey];
+
+          if (conditionValue !== undefined) {
+            const sqlOperator = getSQLOperator(operatorKey);
+
+            if (Array.isArray(conditionValue)) {
+              const paramPlaceholder = `$${index}`;
+              const sqlArrayType =
+                typeof conditionValue[0] === 'number' ? 'integer[]' : 'text[]';
+
+              clauses.push(
+                `"${key}" ${sqlOperator} (${paramPlaceholder}::${sqlArrayType})`,
+              );
+              replacements[paramPlaceholder] = conditionValue;
+            } else {
+              clauses.push(`"${key}" ${getSQLOperator(operatorKey)} $${index}`);
+              replacements.push(conditionValue);
+            }
+            index++;
           }
-          clauses.push(`"${key}" = $${index}`);
-          replacements.push(paramValue);
-          index++;
         }
         break;
     }
@@ -72,43 +85,35 @@ export function parseConditionForNamedParams(
         const operator = key === '$and' ? 'AND' : 'OR';
         conditions.push(subConditions.join(` ${operator} `));
       } else {
-        let value = cond[key];
+        const value = cond[key as keyof Condition];
 
-        if (typeof value === 'object' && Object.keys(value).length === 1) {
-          const operator = Object.keys(value)[0];
-          let paramValue = value[operator];
+        if (typeof value === 'object' && value !== null) {
+          const operatorKey = Object.keys(value)[0] as keyof ConditionOperator;
+          let paramValue: PrimitiveType = (value as ConditionOperator)[
+            operatorKey
+          ];
 
-          if (
-            typeof paramValue === 'string' &&
-            paramValue.startsWith('{{') &&
-            paramValue.endsWith('}}')
-          ) {
-            const paramKey = paramValue.slice(2, -2);
-            paramValue = params?.[paramKey] ?? null;
+          if (typeof paramValue === 'string') {
+            if (
+              (paramValue as string).startsWith('{{') &&
+              (paramValue as string).endsWith('}}')
+            ) {
+              const paramKey = (paramValue as string).slice(2, -2).trim();
+              paramValue = params?.[paramKey] ?? null;
+            }
           }
 
           const paramPlaceholder = `param_${depth}_${key}`;
           replacements[paramPlaceholder] = paramValue;
 
-          switch (operator) {
-            case '$eq':
-              conditions.push(`"${key}" = :${paramPlaceholder}`);
-              break;
-            case '$ne':
-              conditions.push(`"${key}" != :${paramPlaceholder}`);
-              break;
-            case '$lt':
-              conditions.push(`"${key}" < :${paramPlaceholder}`);
-              break;
-            case '$gt':
-              conditions.push(`"${key}" > :${paramPlaceholder}`);
-              break;
-            case '$lte':
-              conditions.push(`"${key}" <= :${paramPlaceholder}`);
-              break;
-            case '$gte':
-              conditions.push(`"${key}" >= :${paramPlaceholder}`);
-              break;
+          if (Array.isArray(paramValue)) {
+            conditions.push(
+              `"${key}" ${getSQLOperator(operatorKey)} (:${paramPlaceholder})`,
+            );
+          } else {
+            conditions.push(
+              `"${key}" ${getSQLOperator(operatorKey)} :${paramPlaceholder}`,
+            );
           }
         }
       }
@@ -118,4 +123,19 @@ export function parseConditionForNamedParams(
   };
 
   return buildClause(condition);
+}
+
+function getSQLOperator(operator: keyof ConditionOperator): string {
+  const operatorMap: Record<keyof ConditionOperator, string> = {
+    $eq: '=',
+    $neq: '!=',
+    $gt: '>',
+    $gte: '>=',
+    $lt: '<',
+    $lte: '<=',
+    $in: `IN`,
+    $nin: `NOT IN`,
+  };
+
+  return operatorMap[operator] || '=';
 }

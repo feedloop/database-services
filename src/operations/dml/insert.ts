@@ -1,8 +1,11 @@
 import { Transaction } from 'sequelize';
 import { InsertInstruction } from '../../types/dml';
 import { DMLRepository } from '../../repositories/dml-repository';
-import { validateData, validIdentifier } from '../../utils/validation';
-import MetadataTableRepository from '../../repositories/metadata-table-repository';
+import {
+  validateDataType,
+  validateSQL,
+  validIdentifier,
+} from '../../utils/validation';
 
 export class InsertOperation {
   static async execute(
@@ -19,18 +22,15 @@ export class InsertOperation {
       throw new Error('Insert data cannot be empty');
     }
 
-    validateData(data);
+    validateSQL(data);
+    await validateDataType(table, data, transaction);
 
-    const metadataTable = await MetadataTableRepository.findOne(
-      { table_name: table },
-      transaction,
-    );
-    if (!metadataTable) throw new Error(`Table ${table} does not exist`);
-
-    await DMLRepository.insert(table, data, transaction);
+    const result = await DMLRepository.insert(table, data, transaction);
 
     await transaction.afterCommit(() => {
       console.log(`Data inserted into ${table} successfully`);
     });
+
+    return result[0][0].id;
   }
 }

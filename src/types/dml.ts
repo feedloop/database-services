@@ -4,21 +4,25 @@ export type DMLOperations =
   | { operation: 'Update'; instruction: UpdateInstruction }
   | { operation: 'Delete'; instruction: DeleteInstruction };
 
-export type ComparisonOperator = string | number | boolean | null;
+export type PrimitiveType = string | number | boolean | null;
 
 export type ConditionOperator =
-  | { $eq: ComparisonOperator }
-  | { $neq: ComparisonOperator }
+  | { $eq: PrimitiveType }
+  | { $neq: PrimitiveType }
   | { $gt: number }
   | { $gte: number }
   | { $lt: number }
   | { $lte: number }
-  | { $in: ComparisonOperator[] }
-  | { $nin: ComparisonOperator[] };
+  | { $in: PrimitiveType[] }
+  | { $nin: PrimitiveType[] };
 
-export type LogicalOperator = { $and: Condition[] } | { $or: Condition[] };
+// kalau kayak gini bisa ga ya mas? soalnya kemungkinan ada condition yang gak dibungkus and or? atau engga?
+export type LogicalOperator =
+  | { $and: Condition[] }
+  | { $or: Condition[] }
+  | { [column: string]: ConditionOperator };
 
-export type Condition = LogicalOperator | Record<string, ConditionOperator>;
+export type Condition = LogicalOperator;
 
 export interface SelectInstruction {
   table: string;

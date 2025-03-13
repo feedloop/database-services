@@ -79,6 +79,22 @@ describe('DML Operations', () => {
           },
         },
       },
+      {
+        operation: 'Create',
+        resource: 'Column',
+        migration: {
+          name: 'count',
+          table: 'test_dml',
+          column: {
+            type: 'integer',
+            definition: {
+              default: 0,
+              unique: false,
+              nullable: true,
+            },
+          },
+        },
+      },
     ];
 
     await DDLExecutor.execute(ddlPayload, transaction);
@@ -143,6 +159,7 @@ describe('DML Operations', () => {
           data: {
             external_id: 'user1',
             email: 'admin@admin.com',
+            count: 6,
           },
         },
       },
@@ -264,6 +281,27 @@ describe('DML Operations', () => {
     ).rejects.toThrow();
   });
 
+  test('Insert invalid type: number into text column', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Insert',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          data: {
+            external_id: 12345,
+            email: 'admin@admin.com',
+            count: 6,
+          },
+        },
+      },
+    ];
+
+    await expect(
+      DMLExecutor.execute(dmlPayload, transaction),
+    ).rejects.toThrow();
+  });
+
   // UPDATE
   test(' Fail update row into non-existent table', async () => {
     const dmlPayload: DMLOperations[] = [
@@ -304,6 +342,35 @@ describe('DML Operations', () => {
           },
           set: {
             email: "admin@admin.com'); SELECT * FROM users; --",
+          },
+          params: {},
+        },
+      },
+    ];
+
+    await expect(
+      DMLExecutor.execute(dmlPayload, transaction),
+    ).rejects.toThrow();
+  });
+
+  test('Update invalid type: string into integer column', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Update',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            $and: [
+              {
+                external_id: {
+                  $eq: 'user1',
+                },
+              },
+            ],
+          },
+          set: {
+            count: 'invalid_number',
           },
           params: {},
         },
@@ -358,5 +425,463 @@ describe('DML Operations', () => {
     await expect(
       DMLExecutor.execute(dmlPayload, transaction),
     ).rejects.toThrow();
+  });
+
+  test('Delete with invalid type in condition: object instead of string', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Delete',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            $and: [
+              {
+                external_id: {
+                  $eq: 18729,
+                },
+              },
+            ],
+          },
+          params: {},
+        },
+      },
+    ];
+
+    await expect(
+      DMLExecutor.execute(dmlPayload, transaction),
+    ).rejects.toThrow();
+  });
+});
+
+// mas kalau dipisah gini tuh gapapa ga? atau better disatuin aja sama yang atas gitu?
+describe('Test all condition operator on DML Operations', () => {
+  beforeEach(async () => {
+    transaction = await sequelize.transaction();
+
+    // SETUP DDL
+    const ddlPayload: DDLOperations[] = [
+      {
+        operation: 'Create',
+        resource: 'Table',
+        migration: {
+          name: 'test_dml',
+          primaryKey: 'UUID',
+        },
+      },
+      {
+        operation: 'Create',
+        resource: 'Column',
+        migration: {
+          name: 'email',
+          table: 'test_dml',
+          column: {
+            type: 'text',
+            definition: {
+              textType: 'text',
+              default: null,
+              unique: false,
+              nullable: true,
+            },
+          },
+        },
+      },
+      {
+        operation: 'Create',
+        resource: 'Column',
+        migration: {
+          name: 'external_id',
+          table: 'test_dml',
+          column: {
+            type: 'text',
+            definition: {
+              textType: 'text',
+              default: null,
+              unique: false,
+              nullable: true,
+            },
+          },
+        },
+      },
+      {
+        operation: 'Create',
+        resource: 'Column',
+        migration: {
+          name: 'created_at',
+          table: 'test_dml',
+          column: {
+            type: 'timestamp',
+            definition: {
+              default: 'now()',
+              unique: false,
+              nullable: false,
+            },
+          },
+        },
+      },
+      {
+        operation: 'Create',
+        resource: 'Column',
+        migration: {
+          name: 'count',
+          table: 'test_dml',
+          column: {
+            type: 'integer',
+            definition: {
+              default: 0,
+              unique: false,
+              nullable: true,
+            },
+          },
+        },
+      },
+    ];
+
+    await DDLExecutor.execute(ddlPayload, transaction);
+
+    // SETUP DML
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Insert',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          data: {
+            external_id: 'user1',
+            email: 'user1@example.com',
+            count: 10,
+          },
+        },
+      },
+      {
+        operation: 'Insert',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          data: {
+            external_id: 'user2',
+            email: 'user2@example.com',
+            count: 20,
+          },
+        },
+      },
+      {
+        operation: 'Insert',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          data: {
+            external_id: 'user3',
+            email: 'user3@example.com',
+            count: 30,
+          },
+        },
+      },
+    ];
+
+    await DMLExecutor.execute(dmlPayload, transaction);
+  });
+
+  afterEach(async () => {
+    await transaction.rollback();
+  });
+
+  test('Select rows where count = 10 ($eq)', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            $or: [
+              {
+                $or: [
+                  {
+                    count: {
+                      $eq: 10,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(1);
+  });
+
+  test('Select rows where count != 10 ($neq)', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            $or: [
+              {
+                $or: [
+                  {
+                    count: {
+                      $neq: 10,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(2);
+  });
+
+  test('Select rows where count > 15', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            $or: [
+              {
+                $or: [
+                  {
+                    count: {
+                      $gt: 15,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          orderBy: { count: 'ASC' },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(2);
+  });
+
+  test('Select rows where count >= 10 ($gte)', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            count: {
+              $gte: 10,
+            },
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(3);
+  });
+
+  test('Select rows where count < 20', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            count: {
+              $lt: 20,
+            },
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(1);
+  });
+
+  test('Select rows where count <= 10 ($lte)', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            count: {
+              $lte: 10,
+            },
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(1);
+  });
+
+  test('Select rows where count is in [10, 30] ($in)', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            count: {
+              $in: [10, 30],
+            },
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(2);
+  });
+
+  test('Select rows where count is NOT in [10, 30] ($nin)', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            count: {
+              $nin: [10, 30],
+            },
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(1);
+  });
+
+  test('Select rows using AND condition ($and)', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            $and: [
+              {
+                count: {
+                  $gt: 10,
+                },
+              },
+              {
+                external_id: {
+                  $eq: 'user2',
+                },
+              },
+            ],
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(1);
+  });
+
+  test('Select rows using OR condition ($or)', async () => {
+    const dmlPayload: DMLOperations[] = [
+      {
+        operation: 'Select',
+        instruction: {
+          table: 'test_dml',
+          name: 'data',
+          condition: {
+            $or: [
+              {
+                count: {
+                  $eq: 10,
+                },
+              },
+              {
+                external_id: {
+                  $eq: 'user2',
+                },
+              },
+            ],
+          },
+          orderBy: {
+            count: 'ASC',
+          },
+          limit: 10,
+          offset: 0,
+          params: {},
+        },
+      },
+    ];
+
+    const result = await DMLExecutor.execute(dmlPayload, transaction);
+    expect(result[result.length - 1].length).toBe(2);
   });
 });

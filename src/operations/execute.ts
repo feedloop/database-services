@@ -22,15 +22,29 @@ export class DMLExecutor {
           break;
         }
         case 'Insert': {
-          await InsertOperation.execute(instruction, transaction);
+          const insertResult = await InsertOperation.execute(
+            instruction,
+            transaction,
+          );
+          results.push(insertResult);
           break;
         }
         case 'Update': {
-          await UpdateOperation.execute(instruction, transaction);
+          const updateResult = await UpdateOperation.execute(
+            instruction,
+            transaction,
+          );
+          if (updateResult) {
+            results.push(updateResult);
+          }
           break;
         }
         case 'Delete': {
-          await DeleteOperation.execute(instruction, transaction);
+          const deleteResult = await DeleteOperation.execute(
+            instruction,
+            transaction,
+          );
+          results.push(deleteResult);
           break;
         }
         default: {

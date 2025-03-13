@@ -1,10 +1,10 @@
 import { Transaction } from 'sequelize';
 import { UpdateInstruction } from '../../types/dml';
 import { DMLRepository } from '../../repositories/dml-repository';
-import MetadataTableRepository from '../../repositories/metadata-table-repository';
 import {
   validateCondition,
-  validateData,
+  validateDataType,
+  validateSQL,
   validIdentifier,
 } from '../../utils/validation';
 
@@ -21,22 +21,26 @@ export class UpdateOperation {
     if (!set || Object.keys(set).length === 0)
       throw new Error('Update set cannot be empty');
 
-    validateData(set);
+    validateSQL(set);
+    await validateDataType(table, set, transaction);
 
     if (condition) {
+      validateSQL(condition);
       validateCondition(condition);
     }
 
-    const metadataTable = await MetadataTableRepository.findOne(
-      { table_name: table },
+    const result = await DMLRepository.update(
+      table,
+      set,
+      condition,
+      params,
       transaction,
     );
-    if (!metadataTable) throw new Error(`Table ${table} does not exist`);
-
-    await DMLRepository.update(table, set, condition, params, transaction);
 
     await transaction.afterCommit(() => {
       console.log(`Data updated in ${table} successfully`);
     });
+
+    return result;
   }
 }

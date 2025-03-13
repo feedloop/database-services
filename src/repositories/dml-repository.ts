@@ -62,13 +62,14 @@ export class DMLRepository {
     query += setClauses.join(', ');
 
     const whereClause = parseConditionForQuery(condition, replacements, params);
-    query += ` WHERE ${whereClause}`;
+    query += ` WHERE ${whereClause} RETURNING id;`;
 
-    return await sequelize.query(query, {
+    const result = await sequelize.query(query, {
       type: QueryTypes.UPDATE,
       bind: replacements,
       transaction,
     });
+    return result[0];
   }
 
   static async delete(
@@ -84,13 +85,14 @@ export class DMLRepository {
     const replacements: any[] = [];
 
     const whereClause = parseConditionForQuery(condition, replacements, params);
-    query += ` WHERE ${whereClause}`;
+    query += ` WHERE ${whereClause} RETURNING id;`;
 
-    await sequelize.query(query, {
+    const result = await sequelize.query(query, {
       type: QueryTypes.DELETE,
       bind: replacements,
       transaction,
     });
+    return result[0];
   }
 
   public static async select(

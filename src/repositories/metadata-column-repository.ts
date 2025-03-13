@@ -52,6 +52,10 @@ class MetadataColumnRepository {
   static async findOne(condition: WhereOptions, transaction?: Transaction) {
     return await MetadataColumn.findOne({ where: condition, transaction });
   }
+
+  static async findAll(condition: WhereOptions, transaction?: Transaction) {
+    return await MetadataColumn.findAll({ where: condition, transaction });
+  }
 }
 
 export default MetadataColumnRepository;
