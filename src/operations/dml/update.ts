@@ -2,9 +2,8 @@ import { Transaction } from 'sequelize';
 import { UpdateInstruction } from '../../types/dml';
 import { DMLRepository } from '../../repositories/dml-repository';
 import {
-  validateCondition,
-  validateDataType,
-  validateSQL,
+  parseAndValidateCondition,
+  parseAndValidateData,
   validIdentifier,
 } from '../../utils/validation';
 
@@ -21,18 +20,15 @@ export class UpdateOperation {
     if (!set || Object.keys(set).length === 0)
       throw new Error('Update set cannot be empty');
 
-    validateSQL(set);
-    await validateDataType(table, set, transaction);
-
-    if (condition) {
-      validateSQL(condition);
-      validateCondition(condition);
-    }
+    const parsedSet = await parseAndValidateData(table, set, transaction);
+    const parsedCondition = condition
+      ? parseAndValidateCondition(condition)
+      : {};
 
     const result = await DMLRepository.update(
       table,
-      set,
-      condition,
+      parsedSet,
+      parsedCondition,
       params,
       transaction,
     );

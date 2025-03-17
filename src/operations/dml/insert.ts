@@ -1,11 +1,7 @@
 import { Transaction } from 'sequelize';
 import { InsertInstruction } from '../../types/dml';
 import { DMLRepository } from '../../repositories/dml-repository';
-import {
-  validateDataType,
-  validateSQL,
-  validIdentifier,
-} from '../../utils/validation';
+import { parseAndValidateData, validIdentifier } from '../../utils/validation';
 
 export class InsertOperation {
   static async execute(
@@ -22,10 +18,8 @@ export class InsertOperation {
       throw new Error('Insert data cannot be empty');
     }
 
-    validateSQL(data);
-    await validateDataType(table, data, transaction);
-
-    const result = await DMLRepository.insert(table, data, transaction);
+    const parsedData = await parseAndValidateData(table, data, transaction);
+    const result = await DMLRepository.insert(table, parsedData, transaction);
 
     await transaction.afterCommit(() => {
       console.log(`Data inserted into ${table} successfully`);

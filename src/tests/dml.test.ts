@@ -221,9 +221,13 @@ describe('DML Operations', () => {
           name: 'data',
           table: 'test_dml',
           condition: {
-            email: {
-              $eq: "' OR 1=1; --",
-            },
+            $and: [
+              {
+                email: {
+                  $eq: "' OR 1=1; --",
+                },
+              },
+            ],
           },
           orderBy: {
             created_at: 'ASC',
@@ -311,9 +315,13 @@ describe('DML Operations', () => {
           table: 'non_existent_table',
           name: 'data',
           condition: {
-            external_id: {
-              $eq: 'user1',
-            },
+            $and: [
+              {
+                external_id: {
+                  $eq: 'user1',
+                },
+              },
+            ],
           },
           set: {
             external_id: 'admin1',
@@ -336,9 +344,13 @@ describe('DML Operations', () => {
           table: 'test_dml',
           name: 'data',
           condition: {
-            external_id: {
-              $eq: "'; DROP TABLE test_dml; --",
-            },
+            $and: [
+              {
+                external_id: {
+                  $eq: "'; DROP TABLE test_dml; --",
+                },
+              },
+            ],
           },
           set: {
             email: "admin@admin.com'); SELECT * FROM users; --",
@@ -391,9 +403,13 @@ describe('DML Operations', () => {
           table: 'non_existent_table',
           name: 'data',
           condition: {
-            external_id: {
-              $eq: 'user1',
-            },
+            $and: [
+              {
+                external_id: {
+                  $eq: 'user1',
+                },
+              },
+            ],
           },
           params: {},
         },
@@ -413,9 +429,13 @@ describe('DML Operations', () => {
           table: 'test_dml',
           name: 'data',
           condition: {
-            external_id: {
-              $eq: "' OR 1=1; --",
-            },
+            $and: [
+              {
+                external_id: {
+                  $eq: "' OR 1=1; --",
+                },
+              },
+            ],
           },
           params: {},
         },
@@ -693,9 +713,13 @@ describe('Test all condition operator on DML Operations', () => {
           table: 'test_dml',
           name: 'data',
           condition: {
-            count: {
-              $gte: 10,
-            },
+            $and: [
+              {
+                count: {
+                  $gte: 10,
+                },
+              },
+            ],
           },
           orderBy: {
             count: 'ASC',
@@ -719,9 +743,13 @@ describe('Test all condition operator on DML Operations', () => {
           table: 'test_dml',
           name: 'data',
           condition: {
-            count: {
-              $lt: 20,
-            },
+            $and: [
+              {
+                count: {
+                  $lt: 20,
+                },
+              },
+            ],
           },
           orderBy: {
             count: 'ASC',
@@ -745,9 +773,13 @@ describe('Test all condition operator on DML Operations', () => {
           table: 'test_dml',
           name: 'data',
           condition: {
-            count: {
-              $lte: 10,
-            },
+            $and: [
+              {
+                count: {
+                  $lte: 10,
+                },
+              },
+            ],
           },
           orderBy: {
             count: 'ASC',
@@ -771,9 +803,13 @@ describe('Test all condition operator on DML Operations', () => {
           table: 'test_dml',
           name: 'data',
           condition: {
-            count: {
-              $in: [10, 30],
-            },
+            $and: [
+              {
+                count: {
+                  $in: [10, 30],
+                },
+              },
+            ],
           },
           orderBy: {
             count: 'ASC',
@@ -797,9 +833,13 @@ describe('Test all condition operator on DML Operations', () => {
           table: 'test_dml',
           name: 'data',
           condition: {
-            count: {
-              $nin: [10, 30],
-            },
+            $and: [
+              {
+                count: {
+                  $nin: [10, 30],
+                },
+              },
+            ],
           },
           orderBy: {
             count: 'ASC',

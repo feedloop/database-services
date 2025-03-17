@@ -16,7 +16,6 @@ export type ConditionOperator =
   | { $in: PrimitiveType[] }
   | { $nin: PrimitiveType[] };
 
-// kalau kayak gini bisa ga ya mas? soalnya kemungkinan ada condition yang gak dibungkus and or? atau engga?
 export type LogicalOperator =
   | { $and: Condition[] }
   | { $or: Condition[] }

@@ -3,8 +3,7 @@ import { SelectInstruction } from '../../types/dml';
 import { DMLRepository } from '../../repositories/dml-repository';
 import MetadataTableRepository from '../../repositories/metadata-table-repository';
 import {
-  validateCondition,
-  validateSQL,
+  parseAndValidateCondition,
   validIdentifier,
 } from '../../utils/validation';
 
@@ -26,14 +25,12 @@ export class SelectOperation {
       throw new Error(`Table ${table} does not exist`);
     }
 
-    if (condition) {
-      validateSQL(condition);
-      validateCondition(condition);
-    }
-
+    const parsedCondition = condition
+      ? parseAndValidateCondition(condition)
+      : {};
     const result = await DMLRepository.select(
       table,
-      condition || {},
+      parsedCondition,
       orderBy,
       limit,
       offset,

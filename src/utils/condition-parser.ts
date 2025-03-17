@@ -2,7 +2,7 @@ import { Condition, ConditionOperator, PrimitiveType } from '../types/dml';
 
 export function parseConditionForQuery(
   cond: Condition,
-  replacements: Record<string, any>,
+  replacements: any[],
   params?: Record<string, any>,
 ): string {
   if (!cond || Object.keys(cond).length === 0) return '1=1';
