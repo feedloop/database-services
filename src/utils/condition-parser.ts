@@ -1,18 +1,23 @@
-import { Condition, ConditionOperator, PrimitiveType } from '../types/dml';
+import {
+  Condition,
+  ConditionOperator,
+  ConditionOperatorType,
+  OperatorSymbol,
+  PrimitiveType,
+} from '../types/dml';
 
 export function parseConditionForQuery(
   cond: Condition,
-  replacements: any[],
+  replacements: Record<string, any>[],
   params?: Record<string, any>,
 ): string {
   if (!cond || Object.keys(cond).length === 0) return '1=1';
 
   const clauses: string[] = [];
-  let index = replacements.length + 1;
 
   for (const [key, value] of Object.entries(cond)) {
     switch (key) {
-      case '$or':
+      case '$or': {
         if (Array.isArray(value)) {
           const orClauses = value
             .map((v) => `(${parseConditionForQuery(v, replacements, params)})`)
@@ -20,8 +25,9 @@ export function parseConditionForQuery(
           clauses.push(`(${orClauses})`);
         }
         break;
+      }
 
-      case '$and':
+      case '$and': {
         if (Array.isArray(value)) {
           const andClauses = value
             .map((v) => `(${parseConditionForQuery(v, replacements, params)})`)
@@ -29,36 +35,17 @@ export function parseConditionForQuery(
           clauses.push(`(${andClauses})`);
         }
         break;
+      }
 
-      default:
-        if (
-          typeof value === 'object' &&
-          value !== null &&
-          !Array.isArray(value)
-        ) {
-          const operatorKey = Object.keys(value)[0] as keyof ConditionOperator;
-          const conditionValue = (value as ConditionOperator)[operatorKey];
-
-          if (conditionValue !== undefined) {
-            const sqlOperator = getSQLOperator(operatorKey);
-
-            if (Array.isArray(conditionValue)) {
-              const paramPlaceholder = `$${index}`;
-              const sqlArrayType =
-                typeof conditionValue[0] === 'number' ? 'integer[]' : 'text[]';
-
-              clauses.push(
-                `"${key}" ${sqlOperator} (${paramPlaceholder}::${sqlArrayType})`,
-              );
-              replacements[paramPlaceholder] = conditionValue;
-            } else {
-              clauses.push(`"${key}" ${getSQLOperator(operatorKey)} $${index}`);
-              replacements.push(conditionValue);
-            }
-            index++;
-          }
-        }
+      default: {
+        const conditionClause = parseComparisonCondition(
+          key,
+          value,
+          replacements,
+        );
+        if (conditionClause) clauses.push(conditionClause);
         break;
+      }
     }
   }
 
@@ -88,17 +75,16 @@ export function parseConditionForNamedParams(
         const value = cond[key as keyof Condition];
 
         if (typeof value === 'object' && value !== null) {
-          const operatorKey = Object.keys(value)[0] as keyof ConditionOperator;
-          let paramValue: PrimitiveType = (value as ConditionOperator)[
-            operatorKey
-          ];
+          const operatorKey = Object.keys(
+            value,
+          )[0] as keyof typeof ConditionOperatorType;
+          let paramValue: PrimitiveType = (
+            value as Record<keyof typeof ConditionOperatorType, PrimitiveType>
+          )[operatorKey];
 
           if (typeof paramValue === 'string') {
-            if (
-              (paramValue as string).startsWith('{{') &&
-              (paramValue as string).endsWith('}}')
-            ) {
-              const paramKey = (paramValue as string).slice(2, -2).trim();
+            if (paramValue.startsWith('{{') && paramValue.endsWith('}}')) {
+              const paramKey = paramValue.slice(2, -2).trim();
               paramValue = params?.[paramKey] ?? null;
             }
           }
@@ -125,17 +111,39 @@ export function parseConditionForNamedParams(
   return buildClause(condition);
 }
 
-function getSQLOperator(operator: keyof ConditionOperator): string {
-  const operatorMap: Record<keyof ConditionOperator, string> = {
-    $eq: '=',
-    $neq: '!=',
-    $gt: '>',
-    $gte: '>=',
-    $lt: '<',
-    $lte: '<=',
-    $in: `IN`,
-    $nin: `NOT IN`,
-  };
+export function getSQLOperator(operator: keyof ConditionOperator): string {
+  return OperatorSymbol[operator as keyof typeof OperatorSymbol] || '=';
+}
 
-  return operatorMap[operator] || '=';
+function parseComparisonCondition(
+  column: string,
+  value: any,
+  replacements: any[],
+): string | null {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    const operatorKey = Object.keys(
+      value,
+    )[0] as keyof typeof ConditionOperatorType;
+    const conditionValue = (
+      value as Record<keyof typeof ConditionOperatorType, PrimitiveType>
+    )[operatorKey];
+
+    if (conditionValue !== undefined) {
+      const sqlOperator = getSQLOperator(operatorKey);
+      const index = replacements.length + 1;
+
+      if (Array.isArray(conditionValue)) {
+        const paramPlaceholder = `$${index}`;
+        const sqlArrayType =
+          typeof conditionValue[0] === 'number' ? 'integer[]' : 'text[]';
+
+        replacements.push(conditionValue);
+        return `"${column}" ${sqlOperator} (${paramPlaceholder}::${sqlArrayType})`;
+      } else {
+        replacements.push(conditionValue);
+        return `"${column}" ${sqlOperator} $${index}`;
+      }
+    }
+  }
+  return null;
 }

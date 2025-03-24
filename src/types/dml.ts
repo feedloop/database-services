@@ -4,24 +4,37 @@ export type DMLOperations =
   | { operation: 'Update'; instruction: UpdateInstruction }
   | { operation: 'Delete'; instruction: DeleteInstruction };
 
+export const ConditionOperatorType = {
+  EQ: '$eq',
+  NEQ: '$neq',
+  GT: '$gt',
+  GTE: '$gte',
+  LT: '$lt',
+  LTE: '$lte',
+  IN: '$in',
+  NIN: '$nin',
+} as const;
+
+export const OperatorSymbol = {
+  $eq: '=',
+  $neq: '!=',
+  $gt: '>',
+  $gte: '>=',
+  $lt: '<',
+  $lte: '<=',
+  $in: 'IN',
+  $nin: 'NOT IN',
+} as const;
+
 export type PrimitiveType = string | number | boolean | null;
 
-export type ConditionOperator =
-  | { $eq: PrimitiveType }
-  | { $neq: PrimitiveType }
-  | { $gt: number }
-  | { $gte: number }
-  | { $lt: number }
-  | { $lte: number }
-  | { $in: PrimitiveType[] }
-  | { $nin: PrimitiveType[] };
+export type ConditionOperator = Partial<
+  Record<keyof typeof ConditionOperatorType, PrimitiveType | PrimitiveType[]>
+>;
 
-export type LogicalOperator =
-  | { $and: Condition[] }
-  | { $or: Condition[] }
-  | { [column: string]: ConditionOperator };
+export type LogicalOperator = { $and: Condition[] } | { $or: Condition[] };
 
-export type Condition = LogicalOperator;
+export type Condition = LogicalOperator | {};
 
 export interface SelectInstruction {
   table: string;

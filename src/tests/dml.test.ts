@@ -223,9 +223,13 @@ describe('DML Operations', () => {
           condition: {
             $and: [
               {
-                email: {
-                  $eq: "' OR 1=1; --",
-                },
+                $and: [
+                  {
+                    email: {
+                      $eq: "' OR 1=1; --",
+                    },
+                  },
+                ],
               },
             ],
           },
@@ -239,9 +243,9 @@ describe('DML Operations', () => {
       },
     ];
 
-    await expect(
-      DMLExecutor.execute(dmlPayload, transaction),
-    ).rejects.toThrow();
+    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
+      'Possible SQL injection detected in column email',
+    );
   });
 
   // INSERT
@@ -274,15 +278,16 @@ describe('DML Operations', () => {
           name: 'data',
           data: {
             external_id: "user1'; DROP TABLE test_dml; --",
-            email: "admin@admin.com'); SELECT * FROM users; --",
+            email: 'admin@admin.com',
+            count: 10,
           },
         },
       },
     ];
 
-    await expect(
-      DMLExecutor.execute(dmlPayload, transaction),
-    ).rejects.toThrow();
+    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
+      'Possible SQL injection detected in column external_id',
+    );
   });
 
   test('Insert invalid type: number into text column', async () => {
@@ -301,9 +306,9 @@ describe('DML Operations', () => {
       },
     ];
 
-    await expect(
-      DMLExecutor.execute(dmlPayload, transaction),
-    ).rejects.toThrow();
+    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
+      'Invalid type for column external_id: expected TEXT, got number',
+    );
   });
 
   // UPDATE
@@ -347,7 +352,7 @@ describe('DML Operations', () => {
             $and: [
               {
                 external_id: {
-                  $eq: "'; DROP TABLE test_dml; --",
+                  $eq: 'user1',
                 },
               },
             ],
@@ -360,9 +365,9 @@ describe('DML Operations', () => {
       },
     ];
 
-    await expect(
-      DMLExecutor.execute(dmlPayload, transaction),
-    ).rejects.toThrow();
+    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
+      'Possible SQL injection detected in column email',
+    );
   });
 
   test('Update invalid type: string into integer column', async () => {
@@ -389,9 +394,9 @@ describe('DML Operations', () => {
       },
     ];
 
-    await expect(
-      DMLExecutor.execute(dmlPayload, transaction),
-    ).rejects.toThrow();
+    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
+      'Invalid type for column count: expected INTEGER, got string',
+    );
   });
 
   // DELETE
@@ -442,9 +447,9 @@ describe('DML Operations', () => {
       },
     ];
 
-    await expect(
-      DMLExecutor.execute(dmlPayload, transaction),
-    ).rejects.toThrow();
+    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
+      'Possible SQL injection detected in column external_id',
+    );
   });
 
   test('Delete with invalid type in condition: object instead of string', async () => {
@@ -468,9 +473,9 @@ describe('DML Operations', () => {
       },
     ];
 
-    await expect(
-      DMLExecutor.execute(dmlPayload, transaction),
-    ).rejects.toThrow();
+    await expect(DMLExecutor.execute(dmlPayload, transaction)).rejects.toThrow(
+      'Invalid type for column external_id: expected text, got number',
+    );
   });
 });
 
@@ -716,7 +721,7 @@ describe('Test all condition operator on DML Operations', () => {
             $and: [
               {
                 count: {
-                  $gte: 10,
+                  $gte: 30,
                 },
               },
             ],
@@ -732,7 +737,7 @@ describe('Test all condition operator on DML Operations', () => {
     ];
 
     const result = await DMLExecutor.execute(dmlPayload, transaction);
-    expect(result[result.length - 1].length).toBe(3);
+    expect(result[result.length - 1].length).toBe(1);
   });
 
   test('Select rows where count < 20', async () => {
@@ -900,14 +905,30 @@ describe('Test all condition operator on DML Operations', () => {
           condition: {
             $or: [
               {
-                count: {
-                  $eq: 10,
-                },
-              },
-              {
-                external_id: {
-                  $eq: 'user2',
-                },
+                $or: [
+                  {
+                    $or: [
+                      {
+                        $or: [
+                          {
+                            $or: [
+                              {
+                                count: {
+                                  $eq: 10,
+                                },
+                              },
+                              {
+                                external_id: {
+                                  $eq: 'user2',
+                                },
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
