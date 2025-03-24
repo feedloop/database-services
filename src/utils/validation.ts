@@ -151,18 +151,6 @@ function validateAndSanitizeCondition(
   return condition;
 }
 
-// function isConditionOperator(obj: any): obj is ConditionOperatorType {
-//   return (
-//     typeof obj === 'object' &&
-//     obj !== null &&
-//     Object.keys(obj).some((key) =>
-//       ['$eq', '$neq', '$gt', '$gte', '$lt', '$lte', '$in', '$nin'].includes(
-//         key,
-//       ),
-//     )
-//   );
-// }
-
 function isConditionOperator(obj: any): obj is ConditionOperator {
   return (
     typeof obj === 'object' &&
