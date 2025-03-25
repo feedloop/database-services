@@ -4,9 +4,11 @@ import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
 import ddlRoutes from './routes/ddl-routes';
 import { sequelize } from './config/database';
+import schemaRoutes from './routes/schema-routes';
+import dmlRoutes from './routes/dml-routes';
 
 sequelize
-  .sync({ force: true })
+  .sync({ alter: true })
   .then(async () => {
     console.log('Database synchronized successfully.');
   })
@@ -26,6 +28,8 @@ const apiRouter = express.Router();
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/users', userRoutes);
 apiRouter.use('/migrate', ddlRoutes);
+apiRouter.use('/schemas', schemaRoutes);
+apiRouter.use('/execute', dmlRoutes);
 
 app.use('/api', apiRouter);
 

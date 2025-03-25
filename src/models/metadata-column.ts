@@ -68,9 +68,4 @@ MetadataColumn.init(
   },
 );
 
-MetadataColumn.belongsTo(MetadataTable, {
-  foreignKey: 'table_id',
-  onDelete: 'CASCADE',
-});
-
 export default MetadataColumn;

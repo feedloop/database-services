@@ -1,7 +1,7 @@
 import { sequelize } from '../config/database';
 import { Transaction } from 'sequelize';
 import { DDLExecutor } from '../operations/migrate';
-import { Operations } from '../types/ddl';
+import { DDLOperations } from '../types/ddl';
 import MetadataTableRepository from '../repositories/metadata-table-repository';
 
 let transaction: Transaction;
@@ -24,7 +24,7 @@ describe('DDL Operations', () => {
   });
 
   test('Execute a sequence of DDL operations successfully', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -111,7 +111,7 @@ describe('DDL Operations', () => {
 
   // CREATE TABLE TESTS
   test('Fail creating a table with an existing name', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -136,7 +136,7 @@ describe('DDL Operations', () => {
   });
 
   test('Create a table and verify its existence in metadata', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -159,7 +159,7 @@ describe('DDL Operations', () => {
   });
 
   test('Prevent SQL Injection in table name', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -176,7 +176,7 @@ describe('DDL Operations', () => {
   });
 
   test('Prevent invalid characters in table name', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -194,7 +194,7 @@ describe('DDL Operations', () => {
 
   // CREATE COLUMN TESTS
   test('Fail creating a column that already exists', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -232,7 +232,7 @@ describe('DDL Operations', () => {
   });
 
   test('Fail creating a column in a non-existent table', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Column',
@@ -257,7 +257,7 @@ describe('DDL Operations', () => {
   });
 
   test('Prevent invalid characters in column name', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Column',
@@ -278,7 +278,7 @@ describe('DDL Operations', () => {
   });
 
   test('Prevent SQL Injection in column name', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Column',
@@ -300,7 +300,7 @@ describe('DDL Operations', () => {
 
   // ALTER TABLE TESTS
   test('Fail renaming a table if target name already exists', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -333,7 +333,7 @@ describe('DDL Operations', () => {
   });
 
   test('Fail renaming a non-existent table', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Alter',
         resource: 'Table',
@@ -351,7 +351,7 @@ describe('DDL Operations', () => {
 
   // ALTER COLUMN TESTS
   test('Fail renaming a column that does not exist', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -381,7 +381,7 @@ describe('DDL Operations', () => {
   });
 
   test('Fail renaming a column if target name already exists', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',
@@ -432,7 +432,7 @@ describe('DDL Operations', () => {
 
   // DROP TABLE TESTS
   test('Fail dropping a table that does not exist', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Drop',
         resource: 'Table',
@@ -449,7 +449,7 @@ describe('DDL Operations', () => {
 
   // DROP COLUMN TESTS
   test('Fail dropping a column that does not exist', async () => {
-    const payload: Operations[] = [
+    const payload: DDLOperations[] = [
       {
         operation: 'Create',
         resource: 'Table',

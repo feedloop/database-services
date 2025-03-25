@@ -6,7 +6,6 @@ class MetadataTable extends Model {
   public table_name!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-  primaryKey: any;
 }
 
 MetadataTable.init(

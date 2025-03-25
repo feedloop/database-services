@@ -1,5 +1,5 @@
 import { Transaction } from 'sequelize';
-import { ColumnObject, Operations } from '../types/ddl';
+import { ColumnObject, DDLOperations } from '../types/ddl';
 import {
   CreateTable,
   CreateColumn,
@@ -10,16 +10,12 @@ import {
 } from '../operations/ddl';
 
 export class DDLExecutor {
-  static async execute(operations: Operations[], transaction: Transaction) {
+  static async execute(operations: DDLOperations[], transaction: Transaction) {
     for (const { operation, resource, migration } of operations) {
       const { name, table, column, from, to } = migration;
 
       let columnName: string;
       let finalColumnDefinition = {};
-      // let columnName = typeof column === 'string' ? column : undefined;
-      // if (column && typeof column === 'object' && 'definition' in column) {
-      //   finalColumnDefinition = (column as any).definition;
-      // }
 
       if (typeof column === 'string') {
         columnName = column;
