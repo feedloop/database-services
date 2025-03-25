@@ -14,6 +14,10 @@ class UserRepository {
   }) {
     return await Users.create(data);
   }
+
+  static async update(condition: WhereOptions, data: Partial<Users>) {
+    return await Users.update(data, { where: condition });
+  }
 }
 
 export default UserRepository;

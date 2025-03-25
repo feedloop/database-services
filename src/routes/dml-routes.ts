@@ -1,8 +1,9 @@
 import { Router } from 'express';
-const { execute } = require('../controllers/dml-controller');
+import { apiKeyMiddleware } from '../middlewares/apikey-middleware';
+import { execute } from '../controllers/dml-controller';
 
 const router = Router();
 
-router.post('/', execute);
+router.post('/', apiKeyMiddleware, execute);
 
 export default router;

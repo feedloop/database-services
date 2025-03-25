@@ -1,6 +1,6 @@
 import { Router } from 'express';
-const { getUserDetails } = require('../controllers/user-controller');
-const { authMiddleware } = require('../middlewares/auth-middleware');
+import { getUserDetails } from '../controllers/user-controller';
+import { authMiddleware } from '../middlewares/auth-middleware';
 
 const router = Router();
 
