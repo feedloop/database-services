@@ -20,11 +20,7 @@ export const executeQuery = async (req: Request, res: Response) => {
       return errorResponse(res, 'Query contains forbidden operations', 403);
     }
 
-    const queryType = query.trim().toUpperCase().startsWith('SELECT')
-      ? QueryTypes.SELECT
-      : QueryTypes.RAW;
-
-    const result = await sequelize.query(query, { type: queryType });
+    const result = await sequelize.query(query, { type: QueryTypes.RAW });
     return successResponse(res, result, 'Query executed successfully');
   } catch (error) {
     console.error(error);

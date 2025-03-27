@@ -5,6 +5,14 @@ import { ENV } from '../config/env';
 import { hashPassword, generateApiKey } from '../utils/auth';
 import { successResponse, errorResponse } from '../utils/response';
 import UserRepository from '../repositories/user-repository';
+import Users from '../models/user';
+import { InferAttributes } from 'sequelize';
+
+type UserType = InferAttributes<Users>;
+
+interface AuthRequest extends Request {
+  user?: UserType;
+}
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -71,21 +79,9 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserDetails = async (req: Request, res: Response) => {
+export const getUserDetails = async (req: AuthRequest, res: Response) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return errorResponse(res, 'Unauthorized', 401);
-    }
-
-    const decoded: any = jwt.verify(token, ENV.JWT_SECRET);
-    const user = await UserRepository.findOne({ id: decoded.userId });
-
-    if (!user) {
-      return errorResponse(res, 'Unauthorized', 401);
-    }
-
-    return successResponse(res, user, 'User details retrieved');
+    return successResponse(res, req.user, 'User details retrieved');
   } catch (error) {
     console.error(error);
     return errorResponse(res, 'Unauthorized', 401);

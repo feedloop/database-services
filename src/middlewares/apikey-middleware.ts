@@ -14,7 +14,10 @@ export const apiKeyMiddleware = async (
       return errorResponse(res, 'Unauthorized', 401);
     }
 
-    const user = await UserRepository.findOne({ apikey: apiKey });
+    const user = await UserRepository.findOne(
+      { apikey: apiKey },
+      { attributes: { exclude: ['password'] } },
+    );
     if (!user) {
       return errorResponse(res, 'Unauthorized', 401);
     }

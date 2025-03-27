@@ -1,27 +1,25 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { ENV } from '../config/env';
 import { successResponse, errorResponse } from '../utils/response';
 import UserRepository from '../repositories/user-repository';
 import { generateApiKey } from '../utils/auth';
+import Users from '../models/user';
+import { InferAttributes } from 'sequelize';
 
-export const getApiKey = async (req: Request, res: Response) => {
+type UserType = InferAttributes<Users>;
+
+interface AuthRequest extends Request {
+  user?: UserType;
+}
+
+export const getApiKey = async (req: AuthRequest, res: Response) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return errorResponse(res, 'Unauthorized', 401);
-    }
-
-    const decoded: any = jwt.verify(token, ENV.JWT_SECRET);
-    const user = await UserRepository.findOne({ id: decoded.userId });
-
-    if (!user) {
+    if (!req.user) {
       return errorResponse(res, 'Unauthorized', 401);
     }
 
     return successResponse(
       res,
-      { apikey: user.apikey },
+      { apikey: req.user.apikey },
       'User details retrieved',
     );
   } catch (error) {
@@ -30,22 +28,14 @@ export const getApiKey = async (req: Request, res: Response) => {
   }
 };
 
-export const regenerateApiKey = async (req: Request, res: Response) => {
+export const regenerateApiKey = async (req: AuthRequest, res: Response) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return errorResponse(res, 'Unauthorized', 401);
-    }
-
-    const decoded: any = jwt.verify(token, ENV.JWT_SECRET);
-    const user = await UserRepository.findOne({ id: decoded.userId });
-
-    if (!user) {
+    if (!req.user) {
       return errorResponse(res, 'Unauthorized', 401);
     }
 
     const newApiKey = await generateApiKey();
-    await UserRepository.update({ id: decoded.userId }, { apikey: newApiKey });
+    await UserRepository.update({ id: req.user.id }, { apikey: newApiKey });
 
     return successResponse(
       res,

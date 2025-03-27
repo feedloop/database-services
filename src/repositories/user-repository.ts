@@ -1,9 +1,9 @@
 import Users from '../models/user';
-import { WhereOptions } from 'sequelize';
+import { FindOptions, WhereOptions } from 'sequelize';
 
 class UserRepository {
-  static async findOne(condition: WhereOptions) {
-    return await Users.findOne({ where: condition });
+  static async findOne(condition: WhereOptions, options: FindOptions = {}) {
+    return await Users.findOne({ where: condition, ...options });
   }
 
   static async insert(data: {
