@@ -6,6 +6,8 @@ import ddlRoutes from './routes/ddl-routes';
 import { sequelize } from './config/database';
 import schemaRoutes from './routes/schema-routes';
 import dmlRoutes from './routes/dml-routes';
+import queryRoutes from './routes/query-routes';
+import apikeyRoutes from './routes/apikey-routes';
 
 sequelize
   .sync({ alter: true })
@@ -30,6 +32,8 @@ apiRouter.use('/users', userRoutes);
 apiRouter.use('/migrate', ddlRoutes);
 apiRouter.use('/schemas', schemaRoutes);
 apiRouter.use('/execute', dmlRoutes);
+apiRouter.use('/query', queryRoutes);
+apiRouter.use('/apikey', apikeyRoutes);
 
 app.use('/api', apiRouter);
 
