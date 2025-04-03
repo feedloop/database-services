@@ -1,5 +1,8 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
+import swaggerJsDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import swaggerOptions from './config/swagger';
 import userRoutes from './routes/user-routes';
 import authRoutes from './routes/auth-routes';
 import ddlRoutes from './routes/ddl-routes';
@@ -37,10 +40,14 @@ apiRouter.use('/apikey', apikeyRoutes);
 
 app.use('/api', apiRouter);
 
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 app.get('/health', (req: Request, res: Response) => {
   res.send('Hello, TypeScript with Express!');
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Swagger Docs available at http://localhost:${PORT}/api-docs`);
 });
