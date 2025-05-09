@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: database-services-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=12345678
+      - DB_NAME=database_services
+      - DB_HOST=db
+      - DB_PORT=5432
+      - JWT_SECRET=supersecretkey
+      - JWT_EXPIRES_IN=1h
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: database-services-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: database_services
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
