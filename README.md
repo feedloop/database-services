@@ -88,6 +88,28 @@ yarn dev
 
 > Sequelize will automatically sync the database on startup.
 
+### Deployment
+
+This project has been deployed and is publicly accessible via:
+
+```
+http://203.194.113.104:3000
+```
+
+You can test if the service is running using:
+
+```
+http://203.194.113.104:3000/health
+```
+
+And explore the API documentation at:
+
+```
+http://203.194.113.104:3000/api-docs
+```
+
+> Note: Domain configuration and HTTPS setup are in progress.
+
 ## Main API Endpoints
 
 All endpoints are prefixed with `/api`.
@@ -107,6 +129,11 @@ Swagger UI is available at:
 ```
 http://localhost:3000/api-docs
 ```
+Or in production:
+
+```
+http://203.194.113.104:3000/api-docs
+```
 
 ## Health Check
 
@@ -114,6 +141,11 @@ To verify the server is running:
 
 ```bash
 curl http://localhost:3000/health
+```
+Or in production:
+
+```bash
+curl http://203.194.113.104:3000/health
 ```
 
 ## Running Tests (Optional)
