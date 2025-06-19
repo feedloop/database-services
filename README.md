@@ -157,7 +157,3 @@ yarn test
 ```
 
 (If using Docker: exec into the container and run inside)
-
-## Author
-
-This project is developed by Rifa Sania as part of the MBKM Mandiri internship at PT Feedloop Global Teknologi.
